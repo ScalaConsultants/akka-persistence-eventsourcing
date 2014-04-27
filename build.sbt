@@ -1,4 +1,4 @@
-name := "akka-persistence-eventsourcing"
+name := "akka-persistence-event-sourcing"
 
 version := "1.0.0"
 

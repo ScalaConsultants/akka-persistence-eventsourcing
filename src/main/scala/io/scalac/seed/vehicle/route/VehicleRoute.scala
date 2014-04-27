@@ -12,6 +12,8 @@ case class UpdateVehicleData(value: String)
 trait VehicleRoute extends HttpService with Json4sSupport with PerRequestCreator { 
   self: Actor =>
 
+  import VehicleAggregateManager._
+  
   val json4sFormats = DefaultFormats
     
   val vehicleAggregateManager: ActorRef
@@ -20,24 +22,43 @@ trait VehicleRoute extends HttpService with Json4sSupport with PerRequestCreator
     path("vehicles" / Segment / "regnumber" ) { id =>
       post {
         entity(as[UpdateVehicleData]) { cmd =>
-          serve(UpdateRegNumber(id, cmd.value))
+          serveUpdate(UpdateRegNumber(id, cmd.value))
+        }
+      }
+    } ~
+    path("vehicles" / Segment / "color" ) { id =>
+      post {
+        entity(as[UpdateVehicleData]) { cmd =>
+          serveUpdate(UpdateColor(id, cmd.value))
         }
       }
     } ~
     path("vehicles" / Segment ) { id =>
       get {
-        serve(GetVehicle(id))
+        serveGet(GetVehicle(id))
+      } ~
+      delete {
+        serveDelete(DeleteVehicle(id))
       }
     } ~
     path("vehicles") {
       post {
         entity(as[RegisterVehicle]) { cmd =>
-          serve(cmd)
+          serveRegister(cmd)
         }
       }
     }
     
-  def serve(message : RestMessage): Route =
-    ctx => perRequest(ctx, vehicleAggregateManager, message)
-      
+  def serveUpdate(message : VehicleAggregateManager.Command): Route =
+    ctx => perRequestUpdate(ctx, vehicleAggregateManager, message)
+
+  def serveRegister(message : VehicleAggregateManager.Command): Route =
+    ctx => perRequestRegister(ctx, vehicleAggregateManager, message)
+
+  def serveDelete(message : VehicleAggregateManager.Command): Route =
+    ctx => perRequestDelete(ctx, vehicleAggregateManager, message)
+
+  def serveGet(message : VehicleAggregateManager.Command): Route =
+    ctx => perRequestGet(ctx, vehicleAggregateManager, message)
+
 }
