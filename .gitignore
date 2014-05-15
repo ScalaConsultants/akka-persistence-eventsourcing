@@ -22,6 +22,9 @@ project/plugins/project/
 .cache
 .settings/
 
+#IntelliJ IDEA specific
+.idea/
+
 #LevelDB specific
 journal/
 snapshots/
