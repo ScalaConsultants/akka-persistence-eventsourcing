@@ -6,6 +6,7 @@ import io.scalac.seed.common._
 import org.json4s.DefaultFormats
 import spray.httpx.Json4sSupport
 import spray.routing._
+import io.scalac.seed.vehicle.service.VehicleAggregateManager
 
 case class UpdateVehicleData(value: String)
 

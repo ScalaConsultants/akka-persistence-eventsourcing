@@ -11,6 +11,7 @@ import spray.http.StatusCode
 import spray.http.StatusCodes._
 import spray.routing.RequestContext
 import spray.httpx.Json4sSupport
+import io.scalac.seed.vehicle.service.VehicleAggregateManager
 
 trait PerRequest extends Actor with ActorLogging with Json4sSupport {
 

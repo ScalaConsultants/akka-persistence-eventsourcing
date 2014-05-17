@@ -33,11 +33,13 @@ libraryDependencies ++= {
     "io.spray"                %   "spray-testkit"   % sprayVersion,
     "io.spray"                %   "spray-httpx"     % sprayVersion,
     "io.spray"                %   "spray-client"    % sprayVersion,
-     "org.json4s"             %%  "json4s-native" % "3.2.4",
+     "org.json4s"             %%  "json4s-native"   % "3.2.4",
     "joda-time"               %   "joda-time"       % "2.3",
     "org.joda"                %   "joda-convert"    % "1.4",
     "com.typesafe.akka"       %%  "akka-actor"      % akkaVersion,
     "com.typesafe.akka"       %%  "akka-slf4j"      % akkaVersion,
-	"com.typesafe.akka"       %%  "akka-persistence-experimental" % akkaVersion
+    "com.typesafe.akka"       %%  "akka-testkit"    % akkaVersion % "test",
+	"com.typesafe.akka"       %%  "akka-persistence-experimental" % akkaVersion,
+	"org.scalatest"           %%  "scalatest"       % "2.1.6" % "test"
   )
 }

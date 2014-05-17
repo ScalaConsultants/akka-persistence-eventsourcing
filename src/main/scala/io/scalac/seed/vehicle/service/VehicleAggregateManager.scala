@@ -1,8 +1,13 @@
-package io.scalac.seed.vehicle.route
+package io.scalac.seed.vehicle.service
 
 import akka.actor._
 import java.util.UUID
 import io.scalac.seed.vehicle.domain.VehicleAggregate
+import io.scalac.seed.vehicle.domain.VehicleAggregate.ChangeColor
+import io.scalac.seed.vehicle.domain.VehicleAggregate.ChangeRegNumber
+import io.scalac.seed.vehicle.domain.VehicleAggregate.GetState
+import io.scalac.seed.vehicle.domain.VehicleAggregate.Initialize
+import io.scalac.seed.vehicle.domain.VehicleAggregate.Remove
 
 object VehicleAggregateManager {
   
@@ -16,12 +21,10 @@ object VehicleAggregateManager {
   def props: Props = Props(new VehicleAggregateManager)
 }
 
-class VehicleAggregateManager extends Actor {
+class VehicleAggregateManager extends Actor with ActorLogging {
 
   import VehicleAggregateManager._
   import VehicleAggregate._
-  
-  var aggregates = Map[String, ActorRef]()
   
   def receive = {
     case RegisterVehicle(rn, col) =>
@@ -47,12 +50,11 @@ class VehicleAggregateManager extends Actor {
   }
   
   def create(id: String): ActorRef = {
-    val agg = context.actorOf(VehicleAggregate.props(id))
-    aggregates += id -> agg
-    agg
+    log.debug(s"creating actor VehicleAggregate actor ${id}")
+    context.actorOf(VehicleAggregate.props(id), id)
   }
   
   def findOrCreate(id: String): ActorRef = 
-    aggregates.get(id) getOrElse { create(id) }
+    context.child(id) getOrElse create(id)
   
 }

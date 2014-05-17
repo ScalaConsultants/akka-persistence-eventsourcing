@@ -36,7 +36,7 @@ class VehicleAggregate(id: String) extends EventsourcedProcessor {
     
   var state: VehicleState = VehicleState(id)
    
-  def updateState(evt: Event): Unit = evt match {
+  private def updateState(evt: Event): Unit = evt match {
     case VehicleInitialized(reg, col) =>
       context.become(created)
       state = state.copy(regNumber = reg, color = col)
