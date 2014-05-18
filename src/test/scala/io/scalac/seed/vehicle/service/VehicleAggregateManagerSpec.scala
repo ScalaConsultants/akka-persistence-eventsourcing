@@ -10,7 +10,7 @@ import scala.concurrent.duration._
 import scala.language.postfixOps
 import scala.util.Success
 import scala.concurrent.Await
-import io.scalac.seed.vehicle.domain.Vehicle.VehicleState
+import io.scalac.seed.vehicle.domain.VehicleAggregate._
 
 class VehicleAggregateManagerSpec extends FlatSpec with BeforeAndAfterAll {
 
@@ -40,9 +40,9 @@ class VehicleAggregateManagerSpec extends FlatSpec with BeforeAndAfterAll {
     val manager = TestActorRef(VehicleAggregateManager.props)
 
     //create a new vehicle
-    val future = (manager ? RegisterVehicle(regNumber = "reg1", color = "col1")).mapTo[VehicleState]
+    val future = (manager ? RegisterVehicle(regNumber = "reg1", color = "col1")).mapTo[Vehicle]
     
-    val VehicleState(id, _, _) = Await.result(future, 2 seconds)
+    val Vehicle(id, _, _) = Await.result(future, 2 seconds)
     //val Success(id: String) = future.value.get
     
     val initialSize = manager.children.size

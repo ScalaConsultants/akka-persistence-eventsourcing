@@ -2,15 +2,12 @@ package io.scalac.seed.vehicle.domain
 import akka.actor._
 import akka.persistence._
 
-object Vehicle {
-  trait State
-  case object EmptyState extends State
-  case object RemovedState extends State
-  case class VehicleState(id: String, regNumber: String = "", color: String = "") extends State
-}
-
 object VehicleAggregate {
-  
+
+  sealed trait State
+  case object EmptyVehicle extends State
+  case class Vehicle(id: String, regNumber: String = "", color: String = "") extends State
+
   sealed trait Command
   case class Initialize(regNumber: String, color: String) extends Command
   case class ChangeRegNumber(newRegNumber: String) extends Command
@@ -34,7 +31,7 @@ class VehicleAggregate(id: String) extends EventsourcedProcessor {
   
   override def processorId = id
     
-  var state: VehicleState = VehicleState(id)
+  var state: Vehicle = Vehicle(id)
    
   private def updateState(evt: Event): Unit = evt match {
     case VehicleInitialized(reg, col) =>
@@ -47,24 +44,31 @@ class VehicleAggregate(id: String) extends EventsourcedProcessor {
     case VehicleRemoved =>
       context.become(removed)
   }
-    
+  
+  private def updateAndRespond(evt: Event): Unit = {
+    updateState(evt)
+    sender() ! state
+  }
+  
   val receiveRecover: Receive = {
     case evt: Event => updateState(evt)
-    case SnapshotOffer(_, snapshot: VehicleState) => state = snapshot
+    case SnapshotOffer(_, snapshot: Vehicle) => state = snapshot
   }
   
   val initial: Receive = {
     case Initialize(reg, col) => 
-      persist(VehicleInitialized(reg, col))(updateState)
+      persist(VehicleInitialized(reg, col))(updateAndRespond)
     case GetState =>
-      sender() ! EmptyState
+      sender() ! EmptyVehicle
   }
   
   val created: Receive = {
-    case ChangeRegNumber(reg) => persist(RegNumberChanged(reg))(updateState)
-    case ChangeColor(color) => persist(ColorChanged(color))(updateState)    
+    case ChangeRegNumber(reg) => 
+      persist(RegNumberChanged(reg))(updateAndRespond)
+    case ChangeColor(color) => 
+      persist(ColorChanged(color))(updateAndRespond)
     case Remove =>
-      persist(VehicleRemoved)(updateState)
+      persist(VehicleRemoved)(updateAndRespond)
     case GetState =>
       sender() ! state
     case "snap" => saveSnapshot(state)
@@ -72,7 +76,7 @@ class VehicleAggregate(id: String) extends EventsourcedProcessor {
   
   val removed: Receive = {
     case GetState =>
-      sender() ! EmptyState
+      sender() ! EmptyVehicle
   }
 
   val receiveCommand: Receive = initial

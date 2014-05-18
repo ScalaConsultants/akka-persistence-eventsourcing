@@ -4,7 +4,7 @@ import akka.actor._
 import akka.actor.SupervisorStrategy.Stop
 import akka.actor.OneForOneStrategy
 import io.scalac.seed.common._
-import io.scalac.seed.vehicle.domain.Vehicle._
+import io.scalac.seed.vehicle.domain.VehicleAggregate._
 import org.json4s.DefaultFormats
 import scala.concurrent.duration._
 import spray.http.StatusCode
@@ -44,7 +44,7 @@ object PerRequest {
   
   case class RegisterVehicleRequestActor(r: RequestContext, target: ActorRef, message: VehicleAggregateManager.Command) extends PerRequest {
     override val receive: Receive = {
-      case res: VehicleState => complete(Created, res)
+      case res: Vehicle => complete(Created, res)
       case ReceiveTimeout    => complete(GatewayTimeout, Error("Request timeout"))
       case res               => 
         log.error("received unexpected message " + res)
@@ -54,8 +54,7 @@ object PerRequest {
 
   case class DeleteVehicleRequestActor(r: RequestContext, target: ActorRef, message: VehicleAggregateManager.Command) extends PerRequest {
     override val receive: Receive = {
-      case res @ RemovedState => complete(NoContent, "")
-      case res @ EmptyState   => complete(NoContent, "")
+      case res @ EmptyVehicle   => complete(NoContent, "")
       case ReceiveTimeout     => complete(GatewayTimeout, Error("Request timeout"))
       case res                => 
         log.error("received unexpected message " + res)
@@ -65,9 +64,8 @@ object PerRequest {
 
   case class UpdateVehicleRequestActor(r: RequestContext, target: ActorRef, message: VehicleAggregateManager.Command) extends PerRequest {
     override val receive: Receive = {
-      case res: VehicleState  => complete(OK, res)
-      case res @ EmptyState   => complete(NotFound, "")
-      case res @ RemovedState => complete(NotFound, "")
+      case res: Vehicle  => complete(OK, res)
+      case res @ EmptyVehicle   => complete(NotFound, "")
       case ReceiveTimeout     => complete(GatewayTimeout, Error("Request timeout"))
       case res                => 
         log.error("received unexpected message " + res)
@@ -77,9 +75,8 @@ object PerRequest {
 
   case class GetVehicleRequestActor(r: RequestContext, target: ActorRef, message: VehicleAggregateManager.Command) extends PerRequest {
     override val receive: Receive = {
-      case res: VehicleState  => complete(OK, res)
-      case res @ EmptyState   => complete(NotFound, "")
-      case res @ RemovedState => complete(NotFound, "")
+      case res: Vehicle  => complete(OK, res)
+      case res @ EmptyVehicle   => complete(NotFound, "")
       case ReceiveTimeout     => complete(GatewayTimeout, Error("Request timeout"))
       case res                => 
         log.error("received unexpected message " + res)

@@ -30,23 +30,19 @@ class VehicleAggregateManager extends Actor with ActorLogging {
     case RegisterVehicle(rn, col) =>
       val id = UUID.randomUUID().toString()
       val agg = create(id)
-      agg ! Initialize(rn, col)
-      agg forward GetState
+      agg forward Initialize(rn, col)
     case GetVehicle(id) =>
       val aggregate = findOrCreate(id) 
       aggregate forward GetState
     case UpdateRegNumber(id, regNumber) =>
       val aggregate = findOrCreate(id)
-      aggregate ! ChangeRegNumber(regNumber)
-      aggregate forward GetState
+      aggregate forward ChangeRegNumber(regNumber)
     case UpdateColor(id, color) =>
       val aggregate = findOrCreate(id)
-      aggregate ! ChangeColor(color)
-      aggregate forward GetState
+      aggregate forward ChangeColor(color)
     case DeleteVehicle(id) =>
       val aggregate = findOrCreate(id)
-      aggregate ! Remove
-      aggregate forward GetState
+      aggregate forward Remove
   }
   
   def create(id: String): ActorRef = {
