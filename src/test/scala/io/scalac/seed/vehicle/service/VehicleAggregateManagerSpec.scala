@@ -25,7 +25,7 @@ class VehicleAggregateManagerSpec extends FlatSpec with BeforeAndAfterAll {
   }
   
   "VehicleAggregateManager" should "create new child actor when creating new vehicle" in {
-    val manager = TestActorRef(VehicleAggregateManager.props)
+    val manager = TestActorRef(VehicleAggregateManager.props, "VehicleAggregateManager-test-actor")
     
     val initialSize = manager.children.size
     

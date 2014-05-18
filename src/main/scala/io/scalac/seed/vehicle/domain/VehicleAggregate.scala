@@ -1,6 +1,7 @@
 package io.scalac.seed.vehicle.domain
 import akka.actor._
 import akka.persistence._
+import io.scalac.seed.common.Acknowledge
 
 object VehicleAggregate {
 
@@ -24,30 +25,42 @@ object VehicleAggregate {
   def props(id: String): Props = Props(new VehicleAggregate(id))
 }
 
-class VehicleAggregate(id: String) extends EventsourcedProcessor {
+class VehicleAggregate(id: String) extends EventsourcedProcessor with ActorLogging {
   
   import VehicleAggregate._
   import Vehicle._
   
   override def processorId = id
     
-  var state: Vehicle = Vehicle(id)
+  var state: State = EmptyVehicle
    
   private def updateState(evt: Event): Unit = evt match {
     case VehicleInitialized(reg, col) =>
       context.become(created)
-      state = state.copy(regNumber = reg, color = col)
-    case RegNumberChanged(reg) => 
-      state = state.copy(regNumber = reg)
-    case ColorChanged(col) => 
-      state = state.copy(color = col)
+      state = Vehicle(id, reg, col)
+    case RegNumberChanged(reg) => state match {
+      case s: Vehicle => state = s.copy(regNumber = reg) 
+      case _ => //nothing
+    }
+    case ColorChanged(col) => state match { 
+      case s: Vehicle => state = s.copy(color = col)
+      case _ => //nothing
+    }
     case VehicleRemoved =>
       context.become(removed)
+      state = EmptyVehicle
   }
   
   private def updateAndRespond(evt: Event): Unit = {
     updateState(evt)
+    respond
+  }
+  
+  private def respond: Unit = {
+    log.debug("*** " + sender())
+    log.debug("**** " + context.parent)
     sender() ! state
+    context.parent ! Acknowledge(id)
   }
   
   val receiveRecover: Receive = {
@@ -59,7 +72,7 @@ class VehicleAggregate(id: String) extends EventsourcedProcessor {
     case Initialize(reg, col) => 
       persist(VehicleInitialized(reg, col))(updateAndRespond)
     case GetState =>
-      sender() ! EmptyVehicle
+      respond
   }
   
   val created: Receive = {
@@ -70,13 +83,13 @@ class VehicleAggregate(id: String) extends EventsourcedProcessor {
     case Remove =>
       persist(VehicleRemoved)(updateAndRespond)
     case GetState =>
-      sender() ! state
+      respond
     case "snap" => saveSnapshot(state)
   }
   
   val removed: Receive = {
     case GetState =>
-      sender() ! EmptyVehicle
+      respond
   }
 
   val receiveCommand: Receive = initial
