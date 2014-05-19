@@ -19,13 +19,18 @@ object VehicleAggregateManager {
   case class DeleteVehicle(id: String) extends Command
   
   def props: Props = Props(new VehicleAggregateManager)
+
+  val maxAggregatesInMemory = 100
+  val aggregatesToKillAtOnce = 20
 }
 
 class VehicleAggregateManager extends Actor with ActorLogging {
 
   import VehicleAggregateManager._
   import VehicleAggregate._
-  
+
+  private var actorsPendingTermination: List[ActorRef] = Nil
+
   def receive = {
     case RegisterVehicle(rn, col) =>
       val id = UUID.randomUUID().toString()
@@ -43,14 +48,35 @@ class VehicleAggregateManager extends Actor with ActorLogging {
     case DeleteVehicle(id) =>
       val aggregate = findOrCreate(id)
       aggregate forward Remove
+    case Terminated(actor) =>
+      actorsPendingTermination = actorsPendingTermination.filterNot(_ == actor)
   }
   
   def create(id: String): ActorRef = {
     log.debug(s"creating actor VehicleAggregate actor ${id}")
-    context.actorOf(VehicleAggregate.props(id), id)
+    val agg = context.actorOf(VehicleAggregate.props(id), id)
+    context watch agg
+    agg
   }
-  
-  def findOrCreate(id: String): ActorRef = 
-    context.child(id) getOrElse create(id)
-  
+
+  def findOrCreate(id: String): ActorRef =
+    context.child(id) match {
+      case Some(agg) if !actorsPendingTermination.contains(agg) => agg
+      case _ =>
+        killChildrenIfNecessary()
+        create(id)
+    }
+
+  def killChildrenIfNecessary() = {
+    val aggregatesCount = context.children.size - actorsPendingTermination.size
+    if (aggregatesCount >= maxAggregatesInMemory)
+      killAggregates(aggregatesToKillAtOnce)
+  }
+
+  def killAggregates(howMany: Int) = {
+    val childrenToKill = context.children take howMany
+    childrenToKill foreach (_ ! PoisonPill)
+    actorsPendingTermination :::= childrenToKill.toList
+  }
+
 }
