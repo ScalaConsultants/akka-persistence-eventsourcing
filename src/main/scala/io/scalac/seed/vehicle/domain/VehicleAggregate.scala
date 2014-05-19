@@ -15,6 +15,7 @@ object VehicleAggregate {
   case class ChangeColor(newColor: String) extends Command
   case object Remove extends Command
   case object GetState extends Command
+  case object Kill extends Command
 
   sealed trait Event
   case class VehicleInitialized(regNumber: String, color: String) extends Event
@@ -62,7 +63,7 @@ class VehicleAggregate(id: String) extends EventsourcedProcessor with ActorLoggi
     sender() ! state
     context.parent ! Acknowledge(id)
   }
-  
+
   val receiveRecover: Receive = {
     case evt: Event => updateState(evt)
     case SnapshotOffer(_, snapshot: Vehicle) => state = snapshot
@@ -73,6 +74,8 @@ class VehicleAggregate(id: String) extends EventsourcedProcessor with ActorLoggi
       persist(VehicleInitialized(reg, col))(updateAndRespond)
     case GetState =>
       respond
+    case Kill =>
+      self ! PoisonPill
   }
   
   val created: Receive = {
@@ -84,12 +87,16 @@ class VehicleAggregate(id: String) extends EventsourcedProcessor with ActorLoggi
       persist(VehicleRemoved)(updateAndRespond)
     case GetState =>
       respond
+    case Kill =>
+      self ! PoisonPill
     case "snap" => saveSnapshot(state)
   }
   
   val removed: Receive = {
     case GetState =>
       respond
+    case Kill =>
+      self ! PoisonPill
   }
 
   val receiveCommand: Receive = initial

@@ -9,17 +9,18 @@ import org.scalatest.BeforeAndAfterAll
 import scala.concurrent.duration._
 import scala.language.postfixOps
 import scala.util.Success
-import scala.concurrent.Await
+import scala.concurrent.{ExecutionContext, Future, Await}
+import ExecutionContext.Implicits.global
 import io.scalac.seed.vehicle.domain.VehicleAggregate._
 
 class VehicleAggregateManagerSpec extends FlatSpec with BeforeAndAfterAll {
 
   import VehicleAggregateManager._
-  
+
   implicit val actorSystem = ActorSystem("vehicleAggregateManagerSpec-system")
   
   implicit val timeout = Timeout(2 seconds)
-  
+
   override def afterAll = {
     actorSystem.shutdown
   }
@@ -54,6 +55,23 @@ class VehicleAggregateManagerSpec extends FlatSpec with BeforeAndAfterAll {
     val finalSize = manager.children.size
     
     assert(finalSize == initialSize)
+  }
+
+  it should "kill child actors when max count is exceeded" in {
+    val manager = TestActorRef(VehicleAggregateManager.props)
+
+    //create more vehicles than manager should keep
+    implicit val timeout = Timeout(5 seconds)
+    val futures = (0 to VehicleAggregateManager.maxChildren * 2).foldLeft(Seq[Future[Vehicle]]()) { (futures, _) =>
+      futures :+ (manager ? RegisterVehicle(regNumber = "reg1", color = "col1")).mapTo[Vehicle]
+    }
+
+    val future = Future sequence futures
+    Await.result(future, 5 seconds)
+
+    val finalSize = manager.children.size
+
+    assert(finalSize <= VehicleAggregateManager.maxChildren)
   }
   
 }
