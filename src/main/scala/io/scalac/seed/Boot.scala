@@ -3,7 +3,6 @@ package io.scalac.seed
 import akka.actor.{ActorSystem, Props}
 import akka.io.IO
 import spray.can._
-import spray.io._
 
 object Boot extends App {
 

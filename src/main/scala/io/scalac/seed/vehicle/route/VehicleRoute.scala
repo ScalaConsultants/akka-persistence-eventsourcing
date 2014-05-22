@@ -1,8 +1,6 @@
 package io.scalac.seed.vehicle.route
 
 import akka.actor._
-import io.scalac.seed._
-import io.scalac.seed.common._
 import org.json4s.DefaultFormats
 import spray.httpx.Json4sSupport
 import spray.routing._
@@ -10,8 +8,7 @@ import io.scalac.seed.vehicle.service.VehicleAggregateManager
 
 case class UpdateVehicleData(value: String)
 
-trait VehicleRoute extends HttpService with Json4sSupport with PerRequestCreator { 
-  self: Actor =>
+trait VehicleRoute extends HttpService with Json4sSupport with PerRequestCreator {
 
   import VehicleAggregateManager._
   

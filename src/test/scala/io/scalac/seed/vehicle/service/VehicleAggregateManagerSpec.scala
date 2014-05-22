@@ -8,7 +8,6 @@ import org.scalatest.FlatSpec
 import org.scalatest.BeforeAndAfterAll
 import scala.concurrent.duration._
 import scala.language.postfixOps
-import scala.util.Success
 import scala.concurrent.{ExecutionContext, Future, Await}
 import ExecutionContext.Implicits.global
 import io.scalac.seed.vehicle.domain.VehicleAggregate._

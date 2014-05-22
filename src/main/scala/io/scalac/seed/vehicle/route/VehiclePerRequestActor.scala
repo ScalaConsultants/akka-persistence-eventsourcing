@@ -9,7 +9,7 @@ import org.json4s.DefaultFormats
 import scala.concurrent.duration._
 import spray.http.StatusCode
 import spray.http.StatusCodes._
-import spray.routing.RequestContext
+import spray.routing.{HttpService, RequestContext}
 import spray.httpx.Json4sSupport
 import io.scalac.seed.vehicle.service.VehicleAggregateManager
 
@@ -86,20 +86,20 @@ object PerRequest {
 }
 
 trait PerRequestCreator {
-  this: Actor =>
+  this: HttpService =>
 
   import PerRequest._
   
   def perRequestRegister(r: RequestContext, target: ActorRef, message: VehicleAggregateManager.Command) =
-    context.actorOf(Props(RegisterVehicleRequestActor(r, target, message)))
+    actorRefFactory.actorOf(Props(RegisterVehicleRequestActor(r, target, message)))
     
   def perRequestUpdate(r: RequestContext, target: ActorRef, message: VehicleAggregateManager.Command) =
-    context.actorOf(Props(UpdateVehicleRequestActor(r, target, message)))
+    actorRefFactory.actorOf(Props(UpdateVehicleRequestActor(r, target, message)))
     
   def perRequestDelete(r: RequestContext, target: ActorRef, message: VehicleAggregateManager.Command) =
-    context.actorOf(Props(DeleteVehicleRequestActor(r, target, message)))
+    actorRefFactory.actorOf(Props(DeleteVehicleRequestActor(r, target, message)))
 
   def perRequestGet(r: RequestContext, target: ActorRef, message: VehicleAggregateManager.Command) =
-    context.actorOf(Props(GetVehicleRequestActor(r, target, message)))
+    actorRefFactory.actorOf(Props(GetVehicleRequestActor(r, target, message)))
 
 }

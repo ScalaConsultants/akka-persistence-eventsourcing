@@ -29,8 +29,7 @@ object VehicleAggregate {
 class VehicleAggregate(id: String) extends EventsourcedProcessor with ActorLogging {
   
   import VehicleAggregate._
-  import Vehicle._
-  
+
   override def processorId = id
     
   var state: State = EmptyVehicle
