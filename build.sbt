@@ -21,6 +21,8 @@ scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation", "-encoding", "ut
 
 javaOptions := Seq("-Xdebug", "-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=8000")
 
+parallelExecution in Test := false
+
 libraryDependencies ++= {
   val sprayVersion = "1.3.1"
   val akkaVersion = "2.3.2"
