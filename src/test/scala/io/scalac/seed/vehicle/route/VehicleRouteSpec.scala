@@ -1,11 +1,10 @@
-package io.scalac.seed
+package io.scalac.seed.vehicle.route
 
 import spray.http.StatusCodes
 import org.scalatest.{Matchers, FlatSpec}
 import spray.testkit.ScalatestRouteTest
 import io.scalac.seed.vehicle.service.VehicleAggregateManager
 import io.scalac.seed.vehicle.service.VehicleAggregateManager.{GetVehicle, RegisterVehicle}
-import io.scalac.seed.vehicle.route.VehicleRoute
 import java.util.UUID
 import scala.concurrent.duration._
 import akka.pattern.ask
