@@ -26,6 +26,7 @@ class VehicleAggregateManager extends Actor with ActorLogging {
 
   case class PendingCommand(sender: ActorRef, targetProcessorId: String, command: VehicleAggregate.Command)
 
+  import scala.collection.immutable._
   private var childrenBeingTerminated: Seq[ActorRef] = Nil
   private var pendingCommands: Seq[PendingCommand] = Nil
 

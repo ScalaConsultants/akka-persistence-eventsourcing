@@ -54,7 +54,8 @@ object PerRequest {
 
   case class DeleteVehicleRequestActor(r: RequestContext, target: ActorRef, message: VehicleAggregateManager.Command) extends PerRequest {
     override val receive: Receive = {
-      case res @ EmptyVehicle   => complete(NoContent, "")
+      case UninitializedVehicle => complete(NotFound, "")
+      case RemovedVehicle  => complete(NoContent, "")
       case ReceiveTimeout     => complete(GatewayTimeout, Error("Request timeout"))
       case res                => 
         log.error("received unexpected message " + res)
@@ -65,7 +66,7 @@ object PerRequest {
   case class UpdateVehicleRequestActor(r: RequestContext, target: ActorRef, message: VehicleAggregateManager.Command) extends PerRequest {
     override val receive: Receive = {
       case res: Vehicle  => complete(OK, res)
-      case res @ EmptyVehicle   => complete(NotFound, "")
+      case UninitializedVehicle | RemovedVehicle  => complete(NotFound, "")
       case ReceiveTimeout     => complete(GatewayTimeout, Error("Request timeout"))
       case res                => 
         log.error("received unexpected message " + res)
@@ -76,13 +77,14 @@ object PerRequest {
   case class GetVehicleRequestActor(r: RequestContext, target: ActorRef, message: VehicleAggregateManager.Command) extends PerRequest {
     override val receive: Receive = {
       case res: Vehicle  => complete(OK, res)
-      case res @ EmptyVehicle   => complete(NotFound, "")
+      case UninitializedVehicle | RemovedVehicle  => complete(NotFound, "")
       case ReceiveTimeout     => complete(GatewayTimeout, Error("Request timeout"))
       case res                => 
         log.error("received unexpected message " + res)
         complete(InternalServerError, "Something unexpected happened. We're working on it.")
     }  
   }
+
 }
 
 trait PerRequestCreator {

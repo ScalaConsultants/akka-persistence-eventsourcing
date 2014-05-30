@@ -10,7 +10,7 @@ import java.util.UUID
 import scala.concurrent.duration._
 import akka.pattern.ask
 import scala.concurrent.Await
-import io.scalac.seed.vehicle.domain.VehicleAggregate.{EmptyVehicle, Vehicle}
+import io.scalac.seed.vehicle.domain.VehicleAggregate.{RemovedVehicle, Vehicle}
 import org.json4s.{DefaultFormats, JObject}
 import akka.util.Timeout
 
@@ -62,7 +62,7 @@ class VehicleRouteSpec extends FlatSpec with ScalatestRouteTest with Matchers wi
       response.status shouldBe StatusCodes.NoContent
       val emptyVehicleFuture = (vehicleAggregateManager ? GetVehicle(vehicle.id))
       val emptyVehicle = Await.result(emptyVehicleFuture, 2.seconds)
-      emptyVehicle shouldBe EmptyVehicle
+      emptyVehicle shouldBe RemovedVehicle
     }
   }
 
