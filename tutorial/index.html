@@ -1,0 +1,71 @@
+<body>
+	<div>
+        <h2>Explore the app</h2>
+        <p>
+            Once the application is <a href="#run">started</a> you can test it's functionality by invoking http requests. You can do it using any tool you like (some useful ones are <a href="https://chrome.google.com/webstore/detail/postman-rest-client/fdmmgilgnpjigdojojpjoooidkmcomcm">Postman for Chrome</a> or <a href="https://addons.mozilla.org/pl/firefox/addon/restclient/">RESTClient for Firefox</a>).
+        </p>
+        <p>
+            All accessible routes are defined in <a href="#code/src/main/scala/io/scalac/seed/vehicle/route/VehicleRoute.scala">VehicleRoute.scala</a> file.<br />
+            For example following POST request could be used to create a new vehicle:
+        </p>
+        <p>
+            <code>
+                <pre>
+                Request:
+                POST http://localhost:8080/api/vehicles
+                {"regNumber": "123", "color": "red"}
+
+                Response:
+                201 Created
+                </pre>
+            </code>
+        </p>
+	</div>
+    <div>
+        <h2>Actor per request</h2>
+        <p>
+            Every time new request is received an instance of specific <a href="#code/src/main/scala/io/scalac/seed/vehicle/route/VehiclePerRequestActor.scala">PerRequest</a> actor is created.
+        </p>
+        <p>
+            There are separate actors for each possible request (RegisterVehicleRequestActor, DeleteVehicleRequestActor, etc.).
+        </p>
+        <p>
+            When such PerRequest actor is created it immediately sends a message to <a href="#code/src/main/scala/io/scalac/seed/vehicle/service/VehicleAggregateManager.scala">VehicleAggregateManager</a> actor, which handles the request and returns the result.
+            PerRequest actor handles result returned from VehicleAggregateManager and responds with proper http response.
+        </p>
+        <p>
+            More information on per-request pattern can be found in <a href="https://typesafe.com/activator/template/spray-actor-per-request">Actor per-request model with spray activator template</a>.
+        </p>
+    </div>
+    <div>
+        <h2>Eventsourcing</h2>
+        <p>
+            When <a href="#code/src/main/scala/io/scalac/seed/vehicle/service/VehicleAggregateManager.scala">VehicleAggregateManager</a> receives new command it instantiates new vehicle aggregate actor and forwards command to it.
+        </p>
+        <p>
+            When aggregate is instantiated it is restored from historical events (akka persistence module takes care of it).
+        </p>
+        <p>
+            Only when aggregate is fully restored it can handle "regular" messages (commands in this case).
+        </p>
+        <p>
+            When aggregate receives new command it creates an event out of it and persists it in journal. Persisted event is then applied to aggregate.
+        </p>
+        <p>
+            For more information, please refer to <a href="http://doc.akka.io/docs/akka/snapshot/scala/persistence.html">Akka persistence documentation</a>.
+        </p>
+    </div>
+    <div>
+        <h2>Snapshots</h2>
+        <p>Snapshots are used to reduce recovery time of aggregates.</p>
+        <p>VehicleAggregate handles taking snapshots itself. It tracks number of processed events and takes snapshot once 10 of them were processed.</p>
+    </div>
+    <div>
+        <h2>Learning resources</h2>
+        <p>Here you'll find some learning resources that we strongly recommend in order to fully understand how does the application work.</p>
+        <ul>
+            <li><a href="http://doc.akka.io/docs/akka/snapshot/scala/persistence.html">Akka Persistence documentation</a></li>
+            <li><a href="https://typesafe.com/activator/template/spray-actor-per-request">Actor per-request model with spray activator template</a></li>
+        </ul>
+    </div>
+</body>

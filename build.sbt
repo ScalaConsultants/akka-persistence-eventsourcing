@@ -13,8 +13,6 @@ resolvers ++= Seq(
   "spray repo"          at "http://repo.spray.io"
 )
 
-EclipseKeys.withSource := true
-
 seq(Revolver.settings: _*)
 
 scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation", "-encoding", "utf8")
