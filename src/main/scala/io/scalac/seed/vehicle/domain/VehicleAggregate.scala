@@ -35,7 +35,7 @@ class VehicleAggregate(id: String) extends EventsourcedProcessor with ActorLoggi
   import VehicleAggregate._
 
   override def processorId = id
-    
+
   private var state: State = UninitializedVehicle
 
   private var eventsSinceLastSnapshot = 0
@@ -84,7 +84,7 @@ class VehicleAggregate(id: String) extends EventsourcedProcessor with ActorLoggi
       eventsSinceLastSnapshot += 1
       updateState(evt)
     }
-    case SnapshotOffer(_, snapshot: Vehicle) => {
+    case SnapshotOffer(_, snapshot: State) => {
       log.debug("recovering vehicle from snapshot")
       state = snapshot
       state match {
