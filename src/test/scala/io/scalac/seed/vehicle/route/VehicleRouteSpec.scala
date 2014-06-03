@@ -3,19 +3,23 @@ package io.scalac.seed.vehicle.route
 import spray.http.StatusCodes
 import org.scalatest.{Matchers, FlatSpec}
 import spray.testkit.ScalatestRouteTest
-import io.scalac.seed.vehicle.service.VehicleAggregateManager
-import io.scalac.seed.vehicle.service.VehicleAggregateManager.{GetVehicle, RegisterVehicle}
+import io.scalac.seed.service.VehicleAggregateManager
+import VehicleAggregateManager.{GetVehicle, RegisterVehicle}
 import java.util.UUID
 import scala.concurrent.duration._
 import akka.pattern.ask
 import scala.concurrent.Await
-import io.scalac.seed.vehicle.domain.VehicleAggregate.{RemovedVehicle, Vehicle}
+import io.scalac.seed.domain.VehicleAggregate
+import VehicleAggregate.Vehicle
 import org.json4s.{DefaultFormats, JObject}
 import akka.util.Timeout
+import io.scalac.seed.domain.AggregateRoot.Removed
+import io.scalac.seed.service.VehicleAggregateManager
+import io.scalac.seed.route.VehicleRoute
 
 class VehicleRouteSpec extends FlatSpec with ScalatestRouteTest with Matchers with VehicleRoute {
 
-  implicit val jsonFormats = DefaultFormats
+  implicit val json4sFormats = DefaultFormats
 
   implicit val timeout = Timeout(2.seconds)
 
@@ -61,7 +65,7 @@ class VehicleRouteSpec extends FlatSpec with ScalatestRouteTest with Matchers wi
       response.status shouldBe StatusCodes.NoContent
       val emptyVehicleFuture = (vehicleAggregateManager ? GetVehicle(vehicle.id))
       val emptyVehicle = Await.result(emptyVehicleFuture, 2.seconds)
-      emptyVehicle shouldBe RemovedVehicle
+      emptyVehicle shouldBe Removed
     }
   }
 

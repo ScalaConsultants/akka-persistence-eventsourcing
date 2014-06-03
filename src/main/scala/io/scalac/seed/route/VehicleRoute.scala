@@ -1,21 +1,23 @@
-package io.scalac.seed.vehicle.route
+package io.scalac.seed.route
 
 import akka.actor._
-import org.json4s.DefaultFormats
 import spray.httpx.Json4sSupport
 import spray.routing._
-import io.scalac.seed.vehicle.service.VehicleAggregateManager
+import io.scalac.seed.service.{VehicleAggregateManager, AggregateManager}
+import io.scalac.seed.domain.VehicleAggregate
 
-case class UpdateVehicleData(value: String)
+object VehicleRoute {
+  case class UpdateVehicleData(value: String)
+}
 
 trait VehicleRoute extends HttpService with Json4sSupport with PerRequestCreator {
 
+  import VehicleRoute._
+
   import VehicleAggregateManager._
   
-  val json4sFormats = DefaultFormats
-    
   val vehicleAggregateManager: ActorRef
-  
+
   val vehicleRoute =
     path("vehicles" / Segment / "regnumber" ) { id =>
       post {
@@ -46,17 +48,17 @@ trait VehicleRoute extends HttpService with Json4sSupport with PerRequestCreator
         }
       }
     }
-    
-  def serveUpdate(message : VehicleAggregateManager.Command): Route =
-    ctx => perRequestUpdate(ctx, vehicleAggregateManager, message)
 
-  def serveRegister(message : VehicleAggregateManager.Command): Route =
-    ctx => perRequestRegister(ctx, vehicleAggregateManager, message)
+  private def serveUpdate(message : AggregateManager.Command): Route =
+    ctx => perRequestUpdate[VehicleAggregate.Vehicle](ctx, vehicleAggregateManager, message)
 
-  def serveDelete(message : VehicleAggregateManager.Command): Route =
+  private def serveRegister(message : AggregateManager.Command): Route =
+    ctx => perRequestRegister[VehicleAggregate.Vehicle](ctx, vehicleAggregateManager, message)
+
+  private def serveDelete(message : AggregateManager.Command): Route =
     ctx => perRequestDelete(ctx, vehicleAggregateManager, message)
 
-  def serveGet(message : VehicleAggregateManager.Command): Route =
-    ctx => perRequestGet(ctx, vehicleAggregateManager, message)
+  private def serveGet(message : AggregateManager.Command): Route =
+    ctx => perRequestGet[VehicleAggregate.Vehicle](ctx, vehicleAggregateManager, message)
 
 }
