@@ -40,6 +40,7 @@ trait AggregateRoot extends EventsourcedProcessor with ActorLogging {
       eventsSinceLastSnapshot = 0
     }
     updateAndRespond(evt)
+    publish(evt)
   }
 
   def updateAndRespond(evt: Event): Unit = {
@@ -51,6 +52,9 @@ trait AggregateRoot extends EventsourcedProcessor with ActorLogging {
     sender() ! state
     context.parent ! Acknowledge(processorId)
   }
+
+  def publish(event: Event) =
+    context.system.eventStream.publish(event)
 
   val receiveRecover: Receive = {
     case evt: Event =>
