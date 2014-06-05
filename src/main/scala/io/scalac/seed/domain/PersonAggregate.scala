@@ -31,6 +31,8 @@ class PersonAggregate(id: String) extends AggregateRoot {
     case PersonRemoved =>
       context.become(removed)
       state = Removed
+    case _ =>
+      log.debug("An attempt to apply unsupported event was made.")
   }
 
   val initial: Receive = {

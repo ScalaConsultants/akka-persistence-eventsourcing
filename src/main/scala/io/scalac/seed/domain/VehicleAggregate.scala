@@ -43,6 +43,8 @@ class VehicleAggregate(id: String) extends AggregateRoot {
     case VehicleRemoved =>
       context.become(removed)
       state = Removed
+    case _ =>
+      log.debug("An attempt to apply unsupported event was made.")
   }
 
   val initial: Receive = {
