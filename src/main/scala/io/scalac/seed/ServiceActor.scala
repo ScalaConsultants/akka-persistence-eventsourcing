@@ -3,10 +3,10 @@ package io.scalac.seed
 import akka.actor._
 import spray.http.MediaTypes._
 import org.json4s.DefaultFormats
-import io.scalac.seed.route.{VehicleRoute, PersonRoute}
-import io.scalac.seed.service.{VehicleAggregateManager, PersonAggregateManager}
+import io.scalac.seed.route.{VehicleRoute, UserRoute}
+import io.scalac.seed.service.{VehicleAggregateManager, UserAggregateManager}
 
-class ServiceActor extends Actor with ActorLogging with VehicleRoute with PersonRoute {
+class ServiceActor extends Actor with ActorLogging with VehicleRoute with UserRoute {
 
   val json4sFormats = DefaultFormats
 
@@ -14,13 +14,13 @@ class ServiceActor extends Actor with ActorLogging with VehicleRoute with Person
 
   val vehicleAggregateManager = context.actorOf(VehicleAggregateManager.props)
 
-  val personAggregateManager = context.actorOf(PersonAggregateManager.props)
+  val userAggregateManager = context.actorOf(UserAggregateManager.props)
 
   def receive =
     runRoute(
       pathPrefix("api") {
         respondWithMediaType(`application/json`) {
-          vehicleRoute ~ personRoute
+          vehicleRoute ~ userRoute
         }
       }
     )

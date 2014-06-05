@@ -4,31 +4,31 @@ import akka.actor._
 import akka.persistence._
 import io.scalac.seed.domain.AggregateRoot.{Uninitialized, Remove, GetState, Removed}
 
-object PersonAggregate {
+object UserAggregate {
 
   import AggregateRoot._
 
-  case class Person(id: String, name: String = "") extends State
+  case class User(id: String, pass: String = "") extends State
 
-  case class Initialize(name: String) extends Command
+  case class Initialize(pass: String) extends Command
 
-  case class PersonInitialized(name: String) extends Event
-  case object PersonRemoved extends Event
+  case class UserInitialized(pass: String) extends Event
+  case object UserRemoved extends Event
 
-  def props(id: String): Props = Props(new PersonAggregate(id))
+  def props(id: String): Props = Props(new UserAggregate(id))
 }
 
-class PersonAggregate(id: String) extends AggregateRoot {
+class UserAggregate(id: String) extends AggregateRoot {
 
-  import PersonAggregate._
+  import UserAggregate._
 
   override def processorId = id
 
   override def updateState(evt: AggregateRoot.Event): Unit = evt match {
-    case PersonInitialized(name) =>
+    case UserInitialized(pass) =>
       context.become(created)
-      state = Person(id, name)
-    case PersonRemoved =>
+      state = User(id, pass)
+    case UserRemoved =>
       context.become(removed)
       state = Removed
     case _ =>
@@ -37,7 +37,7 @@ class PersonAggregate(id: String) extends AggregateRoot {
 
   val initial: Receive = {
     case Initialize(name) =>
-      persist(PersonInitialized(name))(afterEventPersisted)
+      persist(UserInitialized(name))(afterEventPersisted)
     case GetState =>
       respond
     case Kill =>
@@ -46,7 +46,7 @@ class PersonAggregate(id: String) extends AggregateRoot {
 
   val created: Receive = {
     case Remove =>
-      persist(PersonRemoved)(afterEventPersisted)
+      persist(UserRemoved)(afterEventPersisted)
     case GetState =>
       respond
     case Kill =>
@@ -67,7 +67,7 @@ class PersonAggregate(id: String) extends AggregateRoot {
     state match {
       case Uninitialized => context become initial
       case Removed => context become removed
-      case _: Person => context become created
+      case _: User => context become created
     }
   }
 

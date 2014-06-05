@@ -1,9 +1,9 @@
 package io.scalac.seed.vehicle.route
 
-import spray.http.StatusCodes
-import org.scalatest.{Matchers, FlatSpec}
+import spray.http.{BasicHttpCredentials, StatusCodes}
+import org.scalatest.{BeforeAndAfterAll, Matchers, FlatSpec}
 import spray.testkit.ScalatestRouteTest
-import io.scalac.seed.service.VehicleAggregateManager
+import io.scalac.seed.service.{UserAggregateManager, VehicleAggregateManager}
 import VehicleAggregateManager.{GetVehicle, RegisterVehicle}
 import java.util.UUID
 import scala.concurrent.duration._
@@ -14,10 +14,11 @@ import VehicleAggregate.Vehicle
 import org.json4s.{DefaultFormats, JObject}
 import akka.util.Timeout
 import io.scalac.seed.domain.AggregateRoot.Removed
-import io.scalac.seed.service.VehicleAggregateManager
 import io.scalac.seed.route.VehicleRoute
+import io.scalac.seed.service.UserAggregateManager.RegisterUser
+import scala.language.postfixOps
 
-class VehicleRouteSpec extends FlatSpec with ScalatestRouteTest with Matchers with VehicleRoute {
+class VehicleRouteSpec extends FlatSpec with ScalatestRouteTest with Matchers with VehicleRoute with BeforeAndAfterAll {
 
   implicit val json4sFormats = DefaultFormats
 
@@ -27,7 +28,16 @@ class VehicleRouteSpec extends FlatSpec with ScalatestRouteTest with Matchers wi
 
   val vehicleAggregateManager = system.actorOf(VehicleAggregateManager.props)
 
+  val userAggregateManager = system.actorOf(UserAggregateManager.props)
+
   implicit val routeTestTimeout = RouteTestTimeout(5.seconds)
+
+  val credentials = BasicHttpCredentials("test", "test")
+
+  override def beforeAll: Unit = {
+    val userFuture = userAggregateManager ? RegisterUser("test", "test")
+    Await.result(userFuture, 5 seconds)
+  }
 
   "VehicleRoute" should "return not found if non-existing vehicle is requested" in {
     Get("/vehicles/" + UUID.randomUUID().toString) ~> vehicleRoute ~> check {
@@ -38,7 +48,7 @@ class VehicleRouteSpec extends FlatSpec with ScalatestRouteTest with Matchers wi
   it should "create a vehicle" in {
     val regNumber = "123"
     val color = "Cerulean"
-    Post("/vehicles", Map("regNumber" -> regNumber, "color" -> color)) ~> vehicleRoute ~> check {
+    Post("/vehicles", Map("regNumber" -> regNumber, "color" -> color)) ~> addCredentials(credentials) ~> vehicleRoute ~> check {
       response.status shouldBe StatusCodes.Created
       val id = (responseAs[JObject] \ "id").extract[String]
       val vehicle = getVehicleFromManager(id)
@@ -61,7 +71,7 @@ class VehicleRouteSpec extends FlatSpec with ScalatestRouteTest with Matchers wi
 
   it should "remove vehicle" in {
     val vehicle = createVehicleInManager("123", "Pastel pink")
-    Delete("/vehicles/" + vehicle.id) ~> vehicleRoute ~> check {
+    Delete("/vehicles/" + vehicle.id) ~> addCredentials(credentials) ~> vehicleRoute ~> check {
       response.status shouldBe StatusCodes.NoContent
       val emptyVehicleFuture = (vehicleAggregateManager ? GetVehicle(vehicle.id))
       val emptyVehicle = Await.result(emptyVehicleFuture, 2.seconds)
@@ -72,7 +82,7 @@ class VehicleRouteSpec extends FlatSpec with ScalatestRouteTest with Matchers wi
   it should "update vehicle's regNumber" in {
     val vehicle = createVehicleInManager("123", "Persian indigo")
     val newRegNumber = "456"
-    Post(s"/vehicles/${vehicle.id}/regnumber", Map("value" -> newRegNumber)) ~> vehicleRoute ~> check {
+    Post(s"/vehicles/${vehicle.id}/regnumber", Map("value" -> newRegNumber)) ~> addCredentials(credentials) ~> vehicleRoute ~> check {
       response.status shouldBe StatusCodes.OK
       val updatedVehicle = getVehicleFromManager(vehicle.id)
       updatedVehicle.regNumber shouldEqual newRegNumber
@@ -82,7 +92,7 @@ class VehicleRouteSpec extends FlatSpec with ScalatestRouteTest with Matchers wi
   it should "update vehicle's color" in {
     val vehicle = createVehicleInManager("123", "Cherry blossom pink")
     val newColor = "Atomic tangerine"
-    Post(s"/vehicles/${vehicle.id}/color", Map("value" -> newColor)) ~> vehicleRoute ~> check {
+    Post(s"/vehicles/${vehicle.id}/color", Map("value" -> newColor)) ~> addCredentials(credentials) ~> vehicleRoute ~> check {
       response.status shouldBe StatusCodes.OK
       val updatedVehicle = getVehicleFromManager(vehicle.id)
       updatedVehicle.color shouldEqual newColor

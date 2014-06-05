@@ -5,31 +5,39 @@ import spray.httpx.Json4sSupport
 import spray.routing._
 import io.scalac.seed.service.{VehicleAggregateManager, AggregateManager}
 import io.scalac.seed.domain.VehicleAggregate
+import spray.routing.authentication.{UserPass, BasicAuth}
+import scala.concurrent.{ExecutionContext, Future}
+import ExecutionContext.Implicits.global
+import spray.http.StatusCodes._
 
 object VehicleRoute {
   case class UpdateVehicleData(value: String)
 }
 
-trait VehicleRoute extends HttpService with Json4sSupport with PerRequestCreator {
+trait VehicleRoute extends HttpService with Json4sSupport with PerRequestCreator with UserAuthenticator {
 
   import VehicleRoute._
 
   import VehicleAggregateManager._
-  
+
   val vehicleAggregateManager: ActorRef
 
   val vehicleRoute =
     path("vehicles" / Segment / "regnumber" ) { id =>
       post {
-        entity(as[UpdateVehicleData]) { cmd =>
-          serveUpdate(UpdateRegNumber(id, cmd.value))
+        authenticate(BasicAuth(userAuthenticator _, realm = "secure site")) { user =>
+          entity(as[UpdateVehicleData]) { cmd =>
+            serveUpdate(UpdateRegNumber(id, cmd.value))
+          }
         }
       }
     } ~
     path("vehicles" / Segment / "color" ) { id =>
       post {
-        entity(as[UpdateVehicleData]) { cmd =>
-          serveUpdate(UpdateColor(id, cmd.value))
+        authenticate(BasicAuth(userAuthenticator _, realm = "secure site")) { user =>
+          entity(as[UpdateVehicleData]) { cmd =>
+            serveUpdate(UpdateColor(id, cmd.value))
+          }
         }
       }
     } ~
@@ -38,13 +46,17 @@ trait VehicleRoute extends HttpService with Json4sSupport with PerRequestCreator
         serveGet(GetVehicle(id))
       } ~
       delete {
-        serveDelete(DeleteVehicle(id))
+        authenticate(BasicAuth(userAuthenticator _, realm = "secure site")) { user =>
+          serveDelete(DeleteVehicle(id))
+        }
       }
     } ~
     path("vehicles") {
-      post {
-        entity(as[RegisterVehicle]) { cmd =>
-          serveRegister(cmd)
+      authenticate(BasicAuth(userAuthenticator _, realm = "secure site")) { user =>
+        post {
+          entity(as[RegisterVehicle]) { cmd =>
+            serveRegister(cmd)
+          }
         }
       }
     }

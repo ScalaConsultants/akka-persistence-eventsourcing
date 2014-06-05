@@ -48,7 +48,7 @@ class VehicleAggregate(id: String) extends AggregateRoot {
   }
 
   val initial: Receive = {
-    case Initialize(reg, col) => 
+    case Initialize(reg, col) =>
       persist(VehicleInitialized(reg, col))(afterEventPersisted)
     case GetState =>
       respond
