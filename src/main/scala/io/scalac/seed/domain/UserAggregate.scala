@@ -2,7 +2,8 @@ package io.scalac.seed.domain
 
 import akka.actor._
 import akka.persistence._
-import io.scalac.seed.domain.AggregateRoot.{Uninitialized, Remove, GetState, Removed}
+import com.github.t3hnar.bcrypt._
+import io.scalac.seed.domain.AggregateRoot._
 
 object UserAggregate {
 
@@ -23,7 +24,6 @@ object UserAggregate {
 class UserAggregate(id: String) extends AggregateRoot {
 
   import UserAggregate._
-  import com.github.t3hnar.bcrypt._
 
   override def processorId = id
 

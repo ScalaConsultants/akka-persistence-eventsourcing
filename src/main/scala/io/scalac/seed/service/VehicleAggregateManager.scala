@@ -1,8 +1,8 @@
 package io.scalac.seed.service
 
 import akka.actor._
-import java.util.UUID
 import io.scalac.seed.domain.{VehicleAggregate, AggregateRoot}
+import java.util.UUID
 
 object VehicleAggregateManager {
 

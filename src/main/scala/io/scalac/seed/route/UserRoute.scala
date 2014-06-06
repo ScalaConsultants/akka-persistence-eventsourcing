@@ -1,13 +1,13 @@
 package io.scalac.seed.route
 
 import akka.actor._
-import spray.httpx.Json4sSupport
-import spray.routing._
-import io.scalac.seed.service.{UserAggregateManager, AggregateManager}
 import io.scalac.seed.domain.UserAggregate
-import spray.routing.authentication.BasicAuth
+import io.scalac.seed.service.{UserAggregateManager, AggregateManager}
 import scala.concurrent.ExecutionContext
 import ExecutionContext.Implicits.global
+import spray.httpx.Json4sSupport
+import spray.routing._
+import spray.routing.authentication.BasicAuth
 
 object UserRoute {
   case class ChangePasswordRequest(pass: String)

@@ -1,21 +1,21 @@
 package io.scalac.seed.route
 
-import spray.http.{BasicHttpCredentials, StatusCodes}
-import org.scalatest.{BeforeAndAfterAll, Matchers, FlatSpec}
-import spray.testkit.ScalatestRouteTest
+import akka.pattern.ask
+import akka.util.Timeout
+import com.github.t3hnar.bcrypt._
+import io.scalac.seed.domain.AggregateRoot.Removed
+import io.scalac.seed.domain.UserAggregate.User
+import io.scalac.seed.route.UserRoute
 import io.scalac.seed.service.{UserAggregateManager, VehicleAggregateManager}
 import VehicleAggregateManager.RegisterVehicle
-import scala.concurrent.duration._
-import akka.pattern.ask
-import scala.concurrent.Await
-import org.json4s.DefaultFormats
-import akka.util.Timeout
-import io.scalac.seed.domain.AggregateRoot.Removed
-import io.scalac.seed.route.UserRoute
 import io.scalac.seed.service.UserAggregateManager.{GetUser, RegisterUser}
+import org.json4s.DefaultFormats
+import org.scalatest.{BeforeAndAfterAll, Matchers, FlatSpec}
+import scala.concurrent.Await
+import scala.concurrent.duration._
 import scala.language.postfixOps
-import io.scalac.seed.domain.UserAggregate.User
-import com.github.t3hnar.bcrypt._
+import spray.http.{BasicHttpCredentials, StatusCodes}
+import spray.testkit.ScalatestRouteTest
 
 class UserRouteSpec extends FlatSpec with ScalatestRouteTest with Matchers with UserRoute with BeforeAndAfterAll {
 

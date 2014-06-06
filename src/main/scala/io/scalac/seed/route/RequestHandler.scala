@@ -1,43 +1,55 @@
 package io.scalac.seed.route
 
 import akka.actor._
-import spray.httpx.Json4sSupport
+import akka.actor.OneForOneStrategy
+import akka.actor.SupervisorStrategy.Stop
+import io.scalac.seed.common.Error
+import io.scalac.seed.domain.AggregateRoot
+import io.scalac.seed.domain.AggregateRoot.{Removed, Uninitialized}
+import io.scalac.seed.service.AggregateManager
 import org.json4s.DefaultFormats
+import scala.concurrent.duration._
+import scala.reflect.ClassTag
 import spray.http.StatusCode
 import spray.http.StatusCodes._
-import akka.actor.SupervisorStrategy.Stop
-import scala.concurrent.duration._
-import io.scalac.seed.service.AggregateManager
+import spray.httpx.Json4sSupport
 import spray.routing.{HttpService, RequestContext}
-import io.scalac.seed.domain.AggregateRoot
-import scala.reflect.ClassTag
-import io.scalac.seed.domain.AggregateRoot.{Removed, Uninitialized}
-import io.scalac.seed.common.Error
-import akka.actor.OneForOneStrategy
 
 object RequestHandler {
 
-  case class RegisterRequestActor[S <: AggregateRoot.State](r: RequestContext, target: ActorRef, message: AggregateManager.Command)(implicit tag: ClassTag[S]) extends RequestHandler {
+  case class RegisterRequestActor[S <: AggregateRoot.State](
+      r: RequestContext, 
+      target: ActorRef, 
+      message: AggregateManager.Command)(implicit tag: ClassTag[S]) extends RequestHandler {
     override def processResult: Receive = {
       case tag(res) => complete(Created, res)
     }
   }
 
-  case class UpdateRequestActor[S <: AggregateRoot.State](r: RequestContext, target: ActorRef, message: AggregateManager.Command)(implicit tag: ClassTag[S]) extends RequestHandler {
+  case class UpdateRequestActor[S <: AggregateRoot.State](
+      r: RequestContext, 
+      target: ActorRef, 
+      message: AggregateManager.Command)(implicit tag: ClassTag[S]) extends RequestHandler {
     override def processResult: Receive = {
       case tag(res) => complete(OK, res)
       case Uninitialized | Removed => complete(NotFound, "")
     }
   }
 
-  case class DeleteRequestActor(r: RequestContext, target: ActorRef, message: AggregateManager.Command) extends RequestHandler {
+  case class DeleteRequestActor(
+      r: RequestContext, 
+      target: ActorRef, 
+      message: AggregateManager.Command) extends RequestHandler {
     override def processResult: Receive = {
       case Uninitialized => complete(NotFound, "")
       case Removed => complete(NoContent, "")
     }
   }
 
-  case class GetRequestActor[S <: AggregateRoot.State](r: RequestContext, target: ActorRef, message: AggregateManager.Command)(implicit tag: ClassTag[S]) extends RequestHandler {
+  case class GetRequestActor[S <: AggregateRoot.State](
+      r: RequestContext, 
+      target: ActorRef, 
+      message: AggregateManager.Command)(implicit tag: ClassTag[S]) extends RequestHandler {
     override def processResult: Receive = {
       case tag(res) => complete(OK, res)
       case Uninitialized | Removed => complete(NotFound, "")
@@ -110,16 +122,28 @@ trait RequestHandlerCreator {
 
   import RequestHandler._
 
-  def handleRegister[S <: AggregateRoot.State](r: RequestContext, target: ActorRef, message: AggregateManager.Command)(implicit tag: ClassTag[S]) =
+  def handleRegister[S <: AggregateRoot.State](
+      r: RequestContext, 
+      target: ActorRef, 
+      message: AggregateManager.Command)(implicit tag: ClassTag[S]) =
     actorRefFactory.actorOf(Props(RegisterRequestActor[S](r, target, message)))
 
-  def handleUpdate[S <: AggregateRoot.State](r: RequestContext, target: ActorRef, message: AggregateManager.Command)(implicit tag: ClassTag[S]) =
+  def handleUpdate[S <: AggregateRoot.State](
+      r: RequestContext, 
+      target: ActorRef, 
+      message: AggregateManager.Command)(implicit tag: ClassTag[S]) =
     actorRefFactory.actorOf(Props(UpdateRequestActor[S](r, target, message)))
 
-  def handleDelete(r: RequestContext, target: ActorRef, message: AggregateManager.Command) =
+  def handleDelete(
+      r: RequestContext, 
+      target: ActorRef, 
+      message: AggregateManager.Command) =
     actorRefFactory.actorOf(Props(DeleteRequestActor(r, target, message)))
 
-  def handleGet[S <: AggregateRoot.State](r: RequestContext, target: ActorRef, message: AggregateManager.Command)(implicit tag: ClassTag[S]) =
+  def handleGet[S <: AggregateRoot.State](
+      r: RequestContext, 
+      target: ActorRef, 
+      message: AggregateManager.Command)(implicit tag: ClassTag[S]) =
     actorRefFactory.actorOf(Props(GetRequestActor[S](r, target, message)))
 
 }

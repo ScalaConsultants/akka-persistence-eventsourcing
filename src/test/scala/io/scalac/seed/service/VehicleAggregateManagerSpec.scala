@@ -4,15 +4,15 @@ import akka.actor.ActorSystem
 import akka.pattern.ask
 import akka.testkit.TestActorRef
 import akka.util.Timeout
-import org.scalatest.FlatSpec
-import org.scalatest.BeforeAndAfterAll
-import scala.concurrent.duration._
-import scala.language.postfixOps
-import scala.concurrent.{ExecutionContext, Future, Await}
-import ExecutionContext.Implicits.global
 import io.scalac.seed.domain.VehicleAggregate
 import VehicleAggregate._
 import io.scalac.seed.service.{VehicleAggregateManager, AggregateManager}
+import org.scalatest.FlatSpec
+import org.scalatest.BeforeAndAfterAll
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future, Await}
+import ExecutionContext.Implicits.global
+import scala.language.postfixOps
 
 class VehicleAggregateManagerSpec extends FlatSpec with BeforeAndAfterAll {
 

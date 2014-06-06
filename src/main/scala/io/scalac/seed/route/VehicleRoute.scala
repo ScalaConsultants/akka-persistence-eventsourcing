@@ -1,13 +1,13 @@
 package io.scalac.seed.route
 
 import akka.actor._
-import spray.httpx.Json4sSupport
-import spray.routing._
-import io.scalac.seed.service.{VehicleAggregateManager, AggregateManager}
 import io.scalac.seed.domain.VehicleAggregate
-import spray.routing.authentication.BasicAuth
+import io.scalac.seed.service.{VehicleAggregateManager, AggregateManager}
 import scala.concurrent.ExecutionContext
 import ExecutionContext.Implicits.global
+import spray.httpx.Json4sSupport
+import spray.routing._
+import spray.routing.authentication.BasicAuth
 
 object VehicleRoute {
   case class UpdateVehicleData(value: String)

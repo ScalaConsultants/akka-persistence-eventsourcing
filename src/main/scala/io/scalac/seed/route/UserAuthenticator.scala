@@ -1,16 +1,16 @@
 package io.scalac.seed.route
 
 import akka.actor.ActorRef
-import spray.routing.authentication.UserPass
-import scala.concurrent.{ExecutionContext, Future}
 import akka.pattern.ask
-import ExecutionContext.Implicits.global
 import akka.util.Timeout
+import com.github.t3hnar.bcrypt._
+import io.scalac.seed.domain.UserAggregate.User
+import io.scalac.seed.service.UserAggregateManager.GetUser
+import scala.concurrent.{ExecutionContext, Future}
+import ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.language.postfixOps
-import io.scalac.seed.service.UserAggregateManager.GetUser
-import io.scalac.seed.domain.UserAggregate.User
-import com.github.t3hnar.bcrypt._
+import spray.routing.authentication.UserPass
 
 trait UserAuthenticator {
 
