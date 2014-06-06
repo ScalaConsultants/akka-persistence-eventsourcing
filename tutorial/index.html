@@ -6,10 +6,29 @@
         </p>
         <p>
             All accessible routes are defined in <a href="#code/src/main/scala/io/scalac/seed/route/VehicleRoute.scala">VehicleRoute.scala</a> and <a href="#code/src/main/scala/io/scalac/seed/route/UserRoute.scala">UserRoute.scala</a> files.<br />
-            Example requests for each route are shown below:
+            Example requests for each route are shown below (POST ones require header "Content-Type: application/json" to be set):
         </p>
         <p>
-            Creating vehicle
+            Registering user
+            <code>
+                <pre>
+                POST http://localhost:8080/api/user
+                {"name": "John", "pass": "s3cr3t"}
+                </pre>
+            </code>
+        </p>
+        <p>
+            Changing user's password (requires user authentication)
+            <code>
+                <pre>
+                POST http://localhost:8080/api/user/password
+                {"pass": "newPassword"}
+                </pre>
+            </code>
+        </p>
+        <hr />
+        <p>
+            Creating vehicle (requires user authentication)
             <code>
                 <pre>
                 POST http://localhost:8080/api/vehicles
@@ -26,7 +45,7 @@
             </code>
         </p>
         <p>
-            Deleting vehicle
+            Deleting vehicle (requires user authentication)
             <code>
                 <pre>
                 DELETE http://localhost:8080/api/vehicles/{vehicle-id}
@@ -34,7 +53,7 @@
             </code>
         </p>
         <p>
-            Changing vehicle's regNumber
+            Changing vehicle's regNumber (requires user authentication)
             <code>
                 <pre>
                 POST http://localhost:8080/api/vehicles/{vehicle-id}/regNumber
@@ -43,21 +62,11 @@
             </code>
         </p>
         <p>
-            Changing vehicle's color
+            Changing vehicle's color (requires user authentication)
             <code>
                 <pre>
                 POST http://localhost:8080/api/vehicles/{vehicle-id}/color
                 {"value": "newColor"}
-                </pre>
-            </code>
-        </p>
-        <hr />
-        <p>
-            Registering user
-            <code>
-                <pre>
-                POST http://localhost:8080/api/user
-                {"name": "John", "pass": "s3cr3t"}
                 </pre>
             </code>
         </p>
