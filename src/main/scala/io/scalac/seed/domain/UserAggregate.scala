@@ -21,6 +21,7 @@ object UserAggregate {
 class UserAggregate(id: String) extends AggregateRoot {
 
   import UserAggregate._
+  import com.github.t3hnar.bcrypt._
 
   override def processorId = id
 
@@ -36,8 +37,9 @@ class UserAggregate(id: String) extends AggregateRoot {
   }
 
   val initial: Receive = {
-    case Initialize(name) =>
-      persist(UserInitialized(name))(afterEventPersisted)
+    case Initialize(pass) =>
+      val encryptedPass = pass.bcrypt
+      persist(UserInitialized(encryptedPass))(afterEventPersisted)
     case GetState =>
       respond
     case Kill =>

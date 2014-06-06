@@ -10,6 +10,7 @@ import scala.concurrent.duration._
 import scala.language.postfixOps
 import io.scalac.seed.service.UserAggregateManager.GetUser
 import io.scalac.seed.domain.UserAggregate.User
+import com.github.t3hnar.bcrypt._
 
 trait UserAuthenticator {
 
@@ -20,7 +21,7 @@ trait UserAuthenticator {
       case Some(UserPass(user, pass)) =>
         implicit val timeout = Timeout(2 seconds)
         (userAggregateManager ? GetUser(user)).map( _ match {
-          case u: User if u.pass == pass => Some(u)
+          case u: User if pass.isBcrypted(u.pass) => Some(u)
           case _ => None
         })
       case None =>

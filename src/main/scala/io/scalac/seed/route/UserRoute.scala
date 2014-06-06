@@ -20,7 +20,7 @@ trait UserRoute extends HttpService with Json4sSupport with PerRequestCreator {
         }
       }
     }
-    
+
   private def serveRegister(message : AggregateManager.Command): Route =
     ctx => perRequestRegister[UserAggregate.User](ctx, userAggregateManager, message)
 
