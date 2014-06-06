@@ -1,4 +1,4 @@
-package io.scalac.seed.vehicle.service
+package io.scalac.seed.service
 
 import akka.actor.ActorSystem
 import akka.pattern.ask
@@ -10,7 +10,9 @@ import scala.concurrent.duration._
 import scala.language.postfixOps
 import scala.concurrent.{ExecutionContext, Future, Await}
 import ExecutionContext.Implicits.global
-import io.scalac.seed.vehicle.domain.VehicleAggregate._
+import io.scalac.seed.domain.VehicleAggregate
+import VehicleAggregate._
+import io.scalac.seed.service.{VehicleAggregateManager, AggregateManager}
 
 class VehicleAggregateManagerSpec extends FlatSpec with BeforeAndAfterAll {
 
@@ -43,8 +45,7 @@ class VehicleAggregateManagerSpec extends FlatSpec with BeforeAndAfterAll {
     val future = (manager ? RegisterVehicle(regNumber = "reg1", color = "col1")).mapTo[Vehicle]
     
     val Vehicle(id, _, _) = Await.result(future, 2 seconds)
-    //val Success(id: String) = future.value.get
-    
+
     val initialSize = manager.children.size
     
     //update the vehicle
@@ -61,7 +62,7 @@ class VehicleAggregateManagerSpec extends FlatSpec with BeforeAndAfterAll {
 
     //create more vehicles than manager should keep
     implicit val timeout = Timeout(5 seconds)
-    val futures = (0 to VehicleAggregateManager.maxChildren * 2).foldLeft(Seq[Future[Vehicle]]()) { (futures, _) =>
+    val futures = (0 to AggregateManager.maxChildren * 2).foldLeft(Seq[Future[Vehicle]]()) { (futures, _) =>
       futures :+ (manager ? RegisterVehicle(regNumber = "reg1", color = "col1")).mapTo[Vehicle]
     }
 
@@ -70,7 +71,7 @@ class VehicleAggregateManagerSpec extends FlatSpec with BeforeAndAfterAll {
 
     val finalSize = manager.children.size
 
-    assert(finalSize <= VehicleAggregateManager.maxChildren)
+    assert(finalSize <= AggregateManager.maxChildren)
   }
   
 }

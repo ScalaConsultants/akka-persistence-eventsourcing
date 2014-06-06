@@ -1,46 +1,34 @@
-package io.scalac.seed.vehicle.domain
+package io.scalac.seed.domain
+
 import akka.actor._
 import akka.persistence._
-import io.scalac.seed.common.Acknowledge
 
 object VehicleAggregate {
 
-  sealed trait State
-  case object UninitializedVehicle extends State
-  case object RemovedVehicle extends State
+  import AggregateRoot._
 
   case class Vehicle(id: String, regNumber: String = "", color: String = "") extends State
 
-  sealed trait Command
   case class Initialize(regNumber: String, color: String) extends Command
   case class ChangeRegNumber(newRegNumber: String) extends Command
   case class ChangeColor(newColor: String) extends Command
-  case object Remove extends Command
-  case object GetState extends Command
-  case object Kill extends Command
 
-  sealed trait Event
   case class VehicleInitialized(regNumber: String, color: String) extends Event
   case class RegNumberChanged(regNumber: String) extends Event
   case class ColorChanged(color: String) extends Event
   case object VehicleRemoved extends Event
 
   def props(id: String): Props = Props(new VehicleAggregate(id))
-
-  val eventsPerSnapshot = 10
 }
 
-class VehicleAggregate(id: String) extends EventsourcedProcessor with ActorLogging {
-  
+class VehicleAggregate(id: String) extends AggregateRoot {
+
+  import AggregateRoot._
   import VehicleAggregate._
 
   override def processorId = id
-    
-  private var state: State = UninitializedVehicle
 
-  private var eventsSinceLastSnapshot = 0
-   
-  private def updateState(evt: Event): Unit = evt match {
+  override def updateState(evt: AggregateRoot.Event): Unit = evt match {
     case VehicleInitialized(reg, col) =>
       context.become(created)
       state = Vehicle(id, reg, col)
@@ -54,49 +42,13 @@ class VehicleAggregate(id: String) extends EventsourcedProcessor with ActorLoggi
     }
     case VehicleRemoved =>
       context.become(removed)
-      state = RemovedVehicle
+      state = Removed
+    case _ =>
+      log.debug("An attempt to apply unsupported event was made.")
   }
 
-  private def afterEventPersisted(evt: Event): Unit = {
-    eventsSinceLastSnapshot += 1
-    if (eventsSinceLastSnapshot >= eventsPerSnapshot) {
-      log.debug(s"${eventsPerSnapshot} events reached, saving vehicle snapshot")
-      saveSnapshot(state)
-      eventsSinceLastSnapshot = 0
-    }
-    updateAndRespond(evt)
-  }
-
-  private def updateAndRespond(evt: Event): Unit = {
-    updateState(evt)
-    respond
-  }
-
-  private def respond: Unit = {
-    log.debug("*** " + sender())
-    log.debug("**** " + context.parent)
-    sender() ! state
-    context.parent ! Acknowledge(id)
-  }
-
-  val receiveRecover: Receive = {
-    case evt: Event => {
-      eventsSinceLastSnapshot += 1
-      updateState(evt)
-    }
-    case SnapshotOffer(_, snapshot: Vehicle) => {
-      log.debug("recovering vehicle from snapshot")
-      state = snapshot
-      state match {
-        case UninitializedVehicle => context become initial
-        case RemovedVehicle => context become removed
-        case _: Vehicle => context become created
-      }
-    }
-  }
-  
   val initial: Receive = {
-    case Initialize(reg, col) => 
+    case Initialize(reg, col) =>
       persist(VehicleInitialized(reg, col))(afterEventPersisted)
     case GetState =>
       respond
@@ -115,7 +67,6 @@ class VehicleAggregate(id: String) extends EventsourcedProcessor with ActorLoggi
       respond
     case Kill =>
       self ! PoisonPill
-    case "snap" => saveSnapshot(state)
   }
   
   val removed: Receive = {
@@ -126,5 +77,14 @@ class VehicleAggregate(id: String) extends EventsourcedProcessor with ActorLoggi
   }
 
   val receiveCommand: Receive = initial
+
+  override def restoreFromSnapshot(metadata: SnapshotMetadata, state: State) = {
+    this.state = state
+    state match {
+      case Uninitialized => context become initial
+      case Removed => context become removed
+      case _: Vehicle => context become created
+    }
+  }
 
 }

@@ -41,6 +41,7 @@ libraryDependencies ++= {
     "com.typesafe.akka"       %%  "akka-testkit"    % akkaVersion % "test",
     "com.typesafe.akka"       %%  "akka-persistence-experimental" % akkaVersion,
     "org.scalatest"           %%  "scalatest"       % "2.1.6" % "test",
-    "io.spray"                %   "spray-testkit"   % "1.3.1" % "test"
+    "io.spray"                %   "spray-testkit"   % "1.3.1" % "test",
+    "com.github.t3hnar"       %%  "scala-bcrypt"    % "2.3"
   )
 }
