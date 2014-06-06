@@ -45,8 +45,7 @@ class VehicleAggregateManagerSpec extends FlatSpec with BeforeAndAfterAll {
     val future = (manager ? RegisterVehicle(regNumber = "reg1", color = "col1")).mapTo[Vehicle]
     
     val Vehicle(id, _, _) = Await.result(future, 2 seconds)
-    //val Success(id: String) = future.value.get
-    
+
     val initialSize = manager.children.size
     
     //update the vehicle
