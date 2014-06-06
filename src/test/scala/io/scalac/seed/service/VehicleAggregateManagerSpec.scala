@@ -6,7 +6,6 @@ import akka.testkit.TestActorRef
 import akka.util.Timeout
 import io.scalac.seed.domain.VehicleAggregate
 import VehicleAggregate._
-import io.scalac.seed.service.{VehicleAggregateManager, AggregateManager}
 import org.scalatest.FlatSpec
 import org.scalatest.BeforeAndAfterAll
 import scala.concurrent.duration._

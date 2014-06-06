@@ -4,7 +4,6 @@ import akka.pattern.ask
 import akka.util.Timeout
 import io.scalac.seed.domain.AggregateRoot.Removed
 import io.scalac.seed.domain.VehicleAggregate
-import io.scalac.seed.route.VehicleRoute
 import io.scalac.seed.service.{UserAggregateManager, VehicleAggregateManager}
 import VehicleAggregate.Vehicle
 import VehicleAggregateManager.{GetVehicle, RegisterVehicle}

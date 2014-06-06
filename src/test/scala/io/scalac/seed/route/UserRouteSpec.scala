@@ -3,11 +3,8 @@ package io.scalac.seed.route
 import akka.pattern.ask
 import akka.util.Timeout
 import com.github.t3hnar.bcrypt._
-import io.scalac.seed.domain.AggregateRoot.Removed
 import io.scalac.seed.domain.UserAggregate.User
-import io.scalac.seed.route.UserRoute
 import io.scalac.seed.service.{UserAggregateManager, VehicleAggregateManager}
-import VehicleAggregateManager.RegisterVehicle
 import io.scalac.seed.service.UserAggregateManager.{GetUser, RegisterUser}
 import org.json4s.DefaultFormats
 import org.scalatest.{BeforeAndAfterAll, Matchers, FlatSpec}
