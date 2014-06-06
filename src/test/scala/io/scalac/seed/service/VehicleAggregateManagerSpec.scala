@@ -1,4 +1,4 @@
-package io.scalac.seed.vehicle.service
+package io.scalac.seed.service
 
 import akka.actor.ActorSystem
 import akka.pattern.ask

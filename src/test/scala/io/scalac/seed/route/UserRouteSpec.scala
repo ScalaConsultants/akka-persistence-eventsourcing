@@ -1,4 +1,4 @@
-package io.scalac.seed.vehicle.route
+package io.scalac.seed.route
 
 import spray.http.{BasicHttpCredentials, StatusCodes}
 import org.scalatest.{BeforeAndAfterAll, Matchers, FlatSpec}
