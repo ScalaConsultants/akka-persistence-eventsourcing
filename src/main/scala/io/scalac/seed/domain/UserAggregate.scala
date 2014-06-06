@@ -3,7 +3,7 @@ package io.scalac.seed.domain
 import akka.actor._
 import akka.persistence._
 import com.github.t3hnar.bcrypt._
-import io.scalac.seed.domain.AggregateRoot._
+import io.scalac.seed.domain.AggregateRoot.{Uninitialized, Remove, GetState, Removed}
 
 object UserAggregate {
 
