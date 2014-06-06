@@ -46,6 +46,12 @@ object RequestHandler {
 
 }
 
+/**
+ * RequestHandler is an actor that is created once per request.
+ * Immediately after instantiation it sends a command to specific [[AggregateManager]].
+ * It then awaits response from [[AggregateManager]] or handles exception or timeout if one of them occurred.
+ * Once the result is known, it is written as http response.
+ */
 trait RequestHandler extends Actor with ActorLogging with Json4sSupport {
 
   import context._
@@ -59,6 +65,13 @@ trait RequestHandler extends Actor with ActorLogging with Json4sSupport {
   setReceiveTimeout(2.seconds)
   target ! message
 
+  /**
+   * Completes the request using given status code and body and stops the actor.
+   *
+   * @param status Response status code
+   * @param obj Response body
+   * @tparam T Response body type
+   */
   def complete[T <: AnyRef](status: StatusCode, obj: T) = {
     r.complete(status, obj)
     stop(self)
@@ -66,16 +79,21 @@ trait RequestHandler extends Actor with ActorLogging with Json4sSupport {
 
   override val supervisorStrategy =
     OneForOneStrategy() {
-      case e => {
+      case e =>
         complete(InternalServerError, Error(e.getMessage))
         Stop
-      }
     }
 
+  override def receive = processResult orElse defaultReceive
+
+  /**
+   * Processes result returned from aggregate and completes the request using [[RequestHandler.complete]] method.
+   */
   def processResult: Receive
 
-  override def receive = processResult orElse {
+  private def defaultReceive: Receive = {
     case ReceiveTimeout =>
+      log.debug("Received timeout. Sending GatewayTimeout response.")
       complete(GatewayTimeout, Error("Request timeout"))
     case res =>
       log.error("received unexpected message " + res)
@@ -84,6 +102,9 @@ trait RequestHandler extends Actor with ActorLogging with Json4sSupport {
 
 }
 
+/**
+ * RequestHandlerCreator contains some helper methods to create RequestHandlers for specific request types.
+ */
 trait RequestHandlerCreator {
   self: HttpService =>
 

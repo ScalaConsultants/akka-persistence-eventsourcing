@@ -4,17 +4,14 @@ import spray.http.{BasicHttpCredentials, StatusCodes}
 import org.scalatest.{BeforeAndAfterAll, Matchers, FlatSpec}
 import spray.testkit.ScalatestRouteTest
 import io.scalac.seed.service.{UserAggregateManager, VehicleAggregateManager}
-import VehicleAggregateManager.{GetVehicle, RegisterVehicle}
-import java.util.UUID
+import VehicleAggregateManager.RegisterVehicle
 import scala.concurrent.duration._
 import akka.pattern.ask
 import scala.concurrent.Await
-import io.scalac.seed.domain.VehicleAggregate
-import VehicleAggregate.Vehicle
-import org.json4s.{DefaultFormats, JObject}
+import org.json4s.DefaultFormats
 import akka.util.Timeout
 import io.scalac.seed.domain.AggregateRoot.Removed
-import io.scalac.seed.route.{UserRoute, VehicleRoute}
+import io.scalac.seed.route.UserRoute
 import io.scalac.seed.service.UserAggregateManager.{GetUser, RegisterUser}
 import scala.language.postfixOps
 import io.scalac.seed.domain.UserAggregate.User

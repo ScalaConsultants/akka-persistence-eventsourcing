@@ -1,7 +1,6 @@
 package io.scalac.seed.service
 
 import akka.actor._
-import java.util.UUID
 import io.scalac.seed.domain.{UserAggregate, AggregateRoot}
 
 object UserAggregateManager {

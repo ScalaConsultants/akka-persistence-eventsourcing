@@ -5,10 +5,9 @@ import spray.httpx.Json4sSupport
 import spray.routing._
 import io.scalac.seed.service.{VehicleAggregateManager, AggregateManager}
 import io.scalac.seed.domain.VehicleAggregate
-import spray.routing.authentication.{UserPass, BasicAuth}
-import scala.concurrent.{ExecutionContext, Future}
+import spray.routing.authentication.BasicAuth
+import scala.concurrent.ExecutionContext
 import ExecutionContext.Implicits.global
-import spray.http.StatusCodes._
 
 object VehicleRoute {
   case class UpdateVehicleData(value: String)

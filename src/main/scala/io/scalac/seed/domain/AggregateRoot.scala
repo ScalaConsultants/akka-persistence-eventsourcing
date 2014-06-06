@@ -17,22 +17,41 @@ object AggregateRoot {
   case object Kill extends Command
   case object GetState extends Command
 
+  /**
+   * Specifies how many events should be processed before new snapshot is taken.
+   */
   val eventsPerSnapshot = 10
 }
 
+/**
+ * Base class for other aggregates.
+ * It includes such functionality as: snapshot management, publishing applied events to Event Bus, handling processor recovery.
+ *
+ */
 trait AggregateRoot extends EventsourcedProcessor with ActorLogging {
 
   import AggregateRoot._
 
   override def processorId: String
 
-  var state: State = Uninitialized
+  protected var state: State = Uninitialized
 
   private var eventsSinceLastSnapshot = 0
-   
+
+  /**
+   * Updates internal processor state according to event that is to be applied.
+   *
+   * @param evt Event to apply
+   */
   def updateState(evt: Event): Unit
 
-  def afterEventPersisted(evt: Event): Unit = {
+
+  /**
+   * This method should be used as a callback handler for persist() method.
+   *
+   * @param evt Event that has been persisted
+   */
+  protected def afterEventPersisted(evt: Event): Unit = {
     eventsSinceLastSnapshot += 1
     if (eventsSinceLastSnapshot >= eventsPerSnapshot) {
       log.debug(s"${eventsPerSnapshot} events reached, saving snapshot")
@@ -43,20 +62,20 @@ trait AggregateRoot extends EventsourcedProcessor with ActorLogging {
     publish(evt)
   }
 
-  def updateAndRespond(evt: Event): Unit = {
+  private def updateAndRespond(evt: Event): Unit = {
     updateState(evt)
     respond
   }
 
-  def respond: Unit = {
+  protected def respond: Unit = {
     sender() ! state
     context.parent ! Acknowledge(processorId)
   }
 
-  def publish(event: Event) =
+  private def publish(event: Event) =
     context.system.eventStream.publish(event)
 
-  val receiveRecover: Receive = {
+  override val receiveRecover: Receive = {
     case evt: Event =>
       eventsSinceLastSnapshot += 1
       updateState(evt)
@@ -65,6 +84,6 @@ trait AggregateRoot extends EventsourcedProcessor with ActorLogging {
       log.debug("recovering aggregate from snapshot")
   }
 
-  def restoreFromSnapshot(metadata: SnapshotMetadata, state: State)
+  protected def restoreFromSnapshot(metadata: SnapshotMetadata, state: State)
 
 }
