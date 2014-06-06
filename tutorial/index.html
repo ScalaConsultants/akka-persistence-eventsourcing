@@ -5,42 +5,83 @@
             Once the application is <a href="#run">started</a> you can test it's functionality by invoking http requests. You can do it using any tool you like (some useful ones are <a href="https://chrome.google.com/webstore/detail/postman-rest-client/fdmmgilgnpjigdojojpjoooidkmcomcm">Postman for Chrome</a> or <a href="https://addons.mozilla.org/pl/firefox/addon/restclient/">RESTClient for Firefox</a>).
         </p>
         <p>
-            All accessible routes are defined in <a href="#code/src/main/scala/io/scalac/seed/vehicle/route/VehicleRoute.scala">VehicleRoute.scala</a> file.<br />
-            For example following POST request could be used to create a new vehicle:
+            All accessible routes are defined in <a href="#code/src/main/scala/io/scalac/seed/route/VehicleRoute.scala">VehicleRoute.scala</a> and <a href="#code/src/main/scala/io/scalac/seed/route/UserRoute.scala">UserRoute.scala</a> files.<br />
+            Example requests for each route are shown below:
         </p>
         <p>
+            Creating vehicle
             <code>
                 <pre>
-                Request:
                 POST http://localhost:8080/api/vehicles
                 {"regNumber": "123", "color": "red"}
-
-                Response:
-                201 Created
+                </pre>
+            </code>
+        </p>
+        <p>
+            Retrieving vehicle
+            <code>
+                <pre>
+                GET http://localhost:8080/api/vehicles/{vehicle-id}
+                </pre>
+            </code>
+        </p>
+        <p>
+            Deleting vehicle
+            <code>
+                <pre>
+                DELETE http://localhost:8080/api/vehicles/{vehicle-id}
+                </pre>
+            </code>
+        </p>
+        <p>
+            Changing vehicle's regNumber
+            <code>
+                <pre>
+                POST http://localhost:8080/api/vehicles/{vehicle-id}/regNumber
+                {"value": "newRegNumber"}
+                </pre>
+            </code>
+        </p>
+        <p>
+            Changing vehicle's color
+            <code>
+                <pre>
+                POST http://localhost:8080/api/vehicles/{vehicle-id}/color
+                {"value": "newColor"}
+                </pre>
+            </code>
+        </p>
+        <hr />
+        <p>
+            Registering user
+            <code>
+                <pre>
+                POST http://localhost:8080/api/user
+                {"name": "John", "pass": "s3cr3t"}
                 </pre>
             </code>
         </p>
 	</div>
     <div>
-        <h2>Actor per request</h2>
+        <h2>Request handlers</h2>
         <p>
-            Every time new request is received an instance of specific <a href="#code/src/main/scala/io/scalac/seed/vehicle/route/VehiclePerRequestActor.scala">PerRequest</a> actor is created.
+            Every time new request is received an instance of specific <a href="#code/src/main/scala/io/scalac/seed/route/RequestHandler.scala">RequestHandler</a> actor is created.
         </p>
         <p>
-            There are separate actors for each possible request (RegisterVehicleRequestActor, DeleteVehicleRequestActor, etc.).
+            Since each request can result in different status code for the same aggregate state (for example Removed state for GET request should result in NotFound, for DELETE however it should return NoContent) there are separate actors for each possible request (RegisterRequestActor, DeleteRequestActor, etc.).
         </p>
         <p>
-            When such PerRequest actor is created it immediately sends a message to <a href="#code/src/main/scala/io/scalac/seed/vehicle/service/VehicleAggregateManager.scala">VehicleAggregateManager</a> actor, which handles the request and returns the result.
-            PerRequest actor handles result returned from VehicleAggregateManager and responds with proper http response.
+            When such RequestHandler actor is created it immediately sends a message to <a href="#code/src/main/scala/io/scalac/seed/service/AggregateManager.scala">AggregateManager</a> actor, which handles the request and returns the result.
+            RequestHandler actor handles result returned from AggregateManager and responds with proper http response.
         </p>
         <p>
-            More information on per-request pattern can be found in <a href="https://typesafe.com/activator/template/spray-actor-per-request">Actor per-request model with spray activator template</a>.
+            This pattern is inspired by <a href="https://typesafe.com/activator/template/spray-actor-per-request">spray-actor-per-request</a> Activator template and more information can be found there.
         </p>
     </div>
     <div>
         <h2>Eventsourcing</h2>
         <p>
-            When <a href="#code/src/main/scala/io/scalac/seed/vehicle/service/VehicleAggregateManager.scala">VehicleAggregateManager</a> receives new command it instantiates new vehicle aggregate actor and forwards command to it.
+            When <a href="#code/src/main/scala/io/scalac/seed/service/AggregateManager.scala">AggregateManager</a> receives new command it instantiates new aggregate actor and forwards command to it.
         </p>
         <p>
             When aggregate is instantiated it is restored from historical events (akka persistence module takes care of it).
@@ -66,6 +107,8 @@
         <ul>
             <li><a href="http://doc.akka.io/docs/akka/snapshot/scala/persistence.html">Akka Persistence documentation</a></li>
             <li><a href="https://typesafe.com/activator/template/spray-actor-per-request">Actor per-request model with spray activator template</a></li>
+            <li><a href="http://pkaczor.blogspot.com/2014/04/reactive-ddd-with-akka.html">Paweł Kaczor's "Reactive DDD with Akka" blog post</a></li>
+            <li><a href="http://krasserm.blogspot.com/2013/12/introduction-to-akka-persistence.html">Martin Krasser's " Introduction to Akka Persistence " blog post</a></li>
         </ul>
     </div>
 </body>
