@@ -6,7 +6,7 @@ import spray.routing._
 import io.scalac.seed.service.{UserAggregateManager, AggregateManager}
 import io.scalac.seed.domain.UserAggregate
 
-trait UserRoute extends HttpService with Json4sSupport with PerRequestCreator {
+trait UserRoute extends HttpService with Json4sSupport with RequestHandlerCreator {
 
   import UserAggregateManager._
 
@@ -22,6 +22,6 @@ trait UserRoute extends HttpService with Json4sSupport with PerRequestCreator {
     }
 
   private def serveRegister(message : AggregateManager.Command): Route =
-    ctx => perRequestRegister[UserAggregate.User](ctx, userAggregateManager, message)
+    ctx => handleRegister[UserAggregate.User](ctx, userAggregateManager, message)
 
 }

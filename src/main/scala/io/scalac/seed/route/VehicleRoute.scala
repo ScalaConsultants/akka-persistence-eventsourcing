@@ -14,7 +14,7 @@ object VehicleRoute {
   case class UpdateVehicleData(value: String)
 }
 
-trait VehicleRoute extends HttpService with Json4sSupport with PerRequestCreator with UserAuthenticator {
+trait VehicleRoute extends HttpService with Json4sSupport with RequestHandlerCreator with UserAuthenticator {
 
   import VehicleRoute._
 
@@ -62,15 +62,15 @@ trait VehicleRoute extends HttpService with Json4sSupport with PerRequestCreator
     }
 
   private def serveUpdate(message : AggregateManager.Command): Route =
-    ctx => perRequestUpdate[VehicleAggregate.Vehicle](ctx, vehicleAggregateManager, message)
+    ctx => handleUpdate[VehicleAggregate.Vehicle](ctx, vehicleAggregateManager, message)
 
   private def serveRegister(message : AggregateManager.Command): Route =
-    ctx => perRequestRegister[VehicleAggregate.Vehicle](ctx, vehicleAggregateManager, message)
+    ctx => handleRegister[VehicleAggregate.Vehicle](ctx, vehicleAggregateManager, message)
 
   private def serveDelete(message : AggregateManager.Command): Route =
-    ctx => perRequestDelete(ctx, vehicleAggregateManager, message)
+    ctx => handleDelete(ctx, vehicleAggregateManager, message)
 
   private def serveGet(message : AggregateManager.Command): Route =
-    ctx => perRequestGet[VehicleAggregate.Vehicle](ctx, vehicleAggregateManager, message)
+    ctx => handleGet[VehicleAggregate.Vehicle](ctx, vehicleAggregateManager, message)
 
 }
