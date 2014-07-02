@@ -1,9 +1,9 @@
 package io.scalac.seed.domain
 
 import akka.actor._
-import akka.persistence._
+import akka.persistence.SnapshotMetadata
 import com.github.t3hnar.bcrypt._
-import io.scalac.seed.domain.AggregateRoot.{Uninitialized, Remove, GetState, Removed}
+import io.scalac.seed.domain.AggregateRoot._
 
 object UserAggregate {
 
@@ -25,7 +25,7 @@ class UserAggregate(id: String) extends AggregateRoot {
 
   import UserAggregate._
 
-  override def processorId = id
+  override def persistenceId = id
 
   override def updateState(evt: AggregateRoot.Event): Unit = evt match {
     case UserInitialized(pass) =>
@@ -39,8 +39,6 @@ class UserAggregate(id: String) extends AggregateRoot {
     case UserRemoved =>
       context.become(removed)
       state = Removed
-    case _ =>
-      log.debug("An attempt to apply unsupported event was made.")
   }
 
   val initial: Receive = {
@@ -48,9 +46,9 @@ class UserAggregate(id: String) extends AggregateRoot {
       val encryptedPass = pass.bcrypt
       persist(UserInitialized(encryptedPass))(afterEventPersisted)
     case GetState =>
-      respond
-    case Kill =>
-      self ! PoisonPill
+      respond()
+    case KillAggregate =>
+     self ! PoisonPill
   }
 
   val created: Receive = {
@@ -60,15 +58,15 @@ class UserAggregate(id: String) extends AggregateRoot {
       val newPassEncrypted = newPass.bcrypt
       persist(UserPasswordChanged(newPassEncrypted))(afterEventPersisted)
     case GetState =>
-      respond
-    case Kill =>
+      respond()
+    case KillAggregate =>
       self ! PoisonPill
   }
 
   val removed: Receive = {
     case GetState =>
-      respond
-    case Kill =>
+      respond()
+    case KillAggregate =>
       self ! PoisonPill
   }
 

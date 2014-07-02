@@ -25,7 +25,7 @@ trait AggregateManager extends Actor with ActorLogging {
   import AggregateManager._
 
   import scala.collection.immutable._
-  private var childrenBeingTerminated: Seq[ActorRef] = Nil
+  private var childrenBeingTerminated: Set[ActorRef] = Set.empty
   private var pendingCommands: Seq[PendingCommand] = Nil
 
   /**
@@ -42,10 +42,10 @@ trait AggregateManager extends Actor with ActorLogging {
       childrenBeingTerminated = childrenBeingTerminated filterNot (_ == actor)
       val (commandsForChild, remainingCommands) = pendingCommands partition (_.targetProcessorId == actor.path.name)
       pendingCommands = remainingCommands
-      log.debug(s"Child termination finished. Applying ${commandsForChild.size} cached commands.")
-      for (PendingCommand(sender, targetProcessorId, command) <- commandsForChild) {
+      log.debug("Child termination finished. Applying {} cached commands.", commandsForChild.size)
+      for (PendingCommand(commandSender, targetProcessorId, command) <- commandsForChild) {
         val child = findOrCreate(targetProcessorId)
-        child ! (command, sender)
+        child.tell(command, commandSender)
       }
   }
 
@@ -94,7 +94,7 @@ trait AggregateManager extends Actor with ActorLogging {
       log.debug(s"Max manager children exceeded. Killing ${childrenToKillAtOnce} children.")
       val childrenNotBeingTerminated = context.children.filterNot(childrenBeingTerminated.toSet)
       val childrenToKill = childrenNotBeingTerminated take childrenToKillAtOnce
-      childrenToKill foreach (_ ! Kill)
+      childrenToKill foreach (_ ! KillAggregate)
       childrenBeingTerminated ++= childrenToKill
     }
   }

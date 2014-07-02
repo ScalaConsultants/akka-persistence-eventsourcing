@@ -23,7 +23,7 @@ parallelExecution in Test := false
 
 libraryDependencies ++= {
   val sprayVersion = "1.3.1"
-  val akkaVersion = "2.3.2"
+  val akkaVersion = "2.3.4"
   Seq(
     "org.slf4j"               %   "slf4j-api"       % "1.7.6",
     "ch.qos.logback"          %   "logback-core"    % "1.1.1",

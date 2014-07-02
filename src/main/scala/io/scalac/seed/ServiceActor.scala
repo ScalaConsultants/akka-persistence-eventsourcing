@@ -1,8 +1,8 @@
 package io.scalac.seed
 
 import akka.actor._
-import io.scalac.seed.route.{VehicleRoute, UserRoute}
-import io.scalac.seed.service.{VehicleAggregateManager, UserAggregateManager}
+import io.scalac.seed.route._
+import io.scalac.seed.service._
 import org.json4s.DefaultFormats
 import spray.http.MediaTypes._
 
@@ -24,5 +24,5 @@ class ServiceActor extends Actor with ActorLogging with VehicleRoute with UserRo
         }
       }
     )
-    
+
 }

@@ -14,8 +14,13 @@ object AggregateRoot {
 
   trait Command
   case object Remove extends Command
-  case object Kill extends Command
   case object GetState extends Command
+
+  /**
+   * We don't want the aggregate to be killed if it hasn't fully restored yet,
+   * thus we need some non AutoReceivedMessage that can be handled by akka persistence.
+   */
+  case object KillAggregate extends Command
 
   /**
    * Specifies how many events should be processed before new snapshot is taken.
@@ -28,11 +33,11 @@ object AggregateRoot {
  * It includes such functionality as: snapshot management, publishing applied events to Event Bus, handling processor recovery.
  *
  */
-trait AggregateRoot extends EventsourcedProcessor with ActorLogging {
+trait AggregateRoot extends PersistentActor with ActorLogging {
 
   import AggregateRoot._
 
-  override def processorId: String
+  override def persistenceId: String
 
   protected var state: State = Uninitialized
 
@@ -45,7 +50,6 @@ trait AggregateRoot extends EventsourcedProcessor with ActorLogging {
    */
   def updateState(evt: Event): Unit
 
-
   /**
    * This method should be used as a callback handler for persist() method.
    *
@@ -54,7 +58,7 @@ trait AggregateRoot extends EventsourcedProcessor with ActorLogging {
   protected def afterEventPersisted(evt: Event): Unit = {
     eventsSinceLastSnapshot += 1
     if (eventsSinceLastSnapshot >= eventsPerSnapshot) {
-      log.debug(s"${eventsPerSnapshot} events reached, saving snapshot")
+      log.debug("{} events reached, saving snapshot", eventsPerSnapshot)
       saveSnapshot(state)
       eventsSinceLastSnapshot = 0
     }
@@ -64,12 +68,12 @@ trait AggregateRoot extends EventsourcedProcessor with ActorLogging {
 
   private def updateAndRespond(evt: Event): Unit = {
     updateState(evt)
-    respond
+    respond()
   }
 
-  protected def respond: Unit = {
+  protected def respond(): Unit = {
     sender() ! state
-    context.parent ! Acknowledge(processorId)
+    context.parent ! Acknowledge(persistenceId)
   }
 
   private def publish(event: Event) =
