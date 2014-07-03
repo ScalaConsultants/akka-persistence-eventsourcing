@@ -7,8 +7,8 @@ import io.scalac.seed.domain.VehicleAggregate
 import io.scalac.seed.service.{UserAggregateManager, VehicleAggregateManager}
 import VehicleAggregate.Vehicle
 import VehicleAggregateManager.{GetVehicle, RegisterVehicle}
-import java.util.UUID
 import io.scalac.seed.service.UserAggregateManager.RegisterUser
+import java.util.UUID
 import org.json4s.{DefaultFormats, JObject}
 import org.scalatest.{BeforeAndAfterAll, Matchers, FlatSpec}
 import scala.concurrent.Await
@@ -23,6 +23,8 @@ class VehicleRouteSpec extends FlatSpec with ScalatestRouteTest with Matchers wi
 
   implicit val timeout = Timeout(2.seconds)
 
+  implicit val executionContext = system.dispatcher
+  
   def actorRefFactory = system
 
   val vehicleAggregateManager = system.actorOf(VehicleAggregateManager.props)

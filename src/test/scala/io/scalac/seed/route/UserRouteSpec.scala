@@ -21,6 +21,8 @@ class UserRouteSpec extends FlatSpec with ScalatestRouteTest with Matchers with 
 
   implicit val timeout = Timeout(2.seconds)
 
+  implicit val executionContext = system.dispatcher
+  
   def actorRefFactory = system
 
   val userAggregateManager = system.actorOf(UserAggregateManager.props)

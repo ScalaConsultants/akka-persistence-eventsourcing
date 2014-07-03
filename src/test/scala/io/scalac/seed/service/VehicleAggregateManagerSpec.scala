@@ -9,8 +9,7 @@ import VehicleAggregate._
 import org.scalatest.FlatSpec
 import org.scalatest.BeforeAndAfterAll
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future, Await}
-import ExecutionContext.Implicits.global
+import scala.concurrent.{Future, Await}
 import scala.language.postfixOps
 
 class VehicleAggregateManagerSpec extends FlatSpec with BeforeAndAfterAll {
@@ -21,6 +20,8 @@ class VehicleAggregateManagerSpec extends FlatSpec with BeforeAndAfterAll {
   
   implicit val timeout = Timeout(2 seconds)
 
+  implicit val executionContext = actorSystem.dispatcher
+  
   override def afterAll = {
     actorSystem.shutdown
   }
