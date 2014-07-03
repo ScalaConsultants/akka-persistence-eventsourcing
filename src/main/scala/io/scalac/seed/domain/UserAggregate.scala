@@ -48,7 +48,7 @@ class UserAggregate(id: String) extends AggregateRoot {
     case GetState =>
       respond()
     case KillAggregate =>
-     self ! PoisonPill
+      context.stop(self)
   }
 
   val created: Receive = {
@@ -60,14 +60,14 @@ class UserAggregate(id: String) extends AggregateRoot {
     case GetState =>
       respond()
     case KillAggregate =>
-      self ! PoisonPill
+      context.stop(self)
   }
 
   val removed: Receive = {
     case GetState =>
       respond()
     case KillAggregate =>
-      self ! PoisonPill
+      context.stop(self)
   }
 
   val receiveCommand: Receive = initial
