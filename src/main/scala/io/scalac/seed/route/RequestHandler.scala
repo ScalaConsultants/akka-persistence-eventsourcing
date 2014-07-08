@@ -1,15 +1,14 @@
 package io.scalac.seed.route
 
+import scala.concurrent.duration._
+import scala.reflect.ClassTag
+
 import akka.actor._
-import akka.actor.OneForOneStrategy
-import akka.actor.SupervisorStrategy.Stop
 import io.scalac.seed.common.Error
 import io.scalac.seed.domain.AggregateRoot
 import io.scalac.seed.domain.AggregateRoot.{Removed, Uninitialized}
 import io.scalac.seed.service.AggregateManager
 import org.json4s.DefaultFormats
-import scala.concurrent.duration._
-import scala.reflect.ClassTag
 import spray.http.StatusCode
 import spray.http.StatusCodes._
 import spray.httpx.Json4sSupport
@@ -88,13 +87,6 @@ trait RequestHandler extends Actor with ActorLogging with Json4sSupport {
     r.complete(status, obj)
     stop(self)
   }
-
-  override val supervisorStrategy =
-    OneForOneStrategy() {
-      case e =>
-        complete(InternalServerError, Error(e.getMessage))
-        Stop
-    }
 
   override def receive = processResult orElse defaultReceive
 

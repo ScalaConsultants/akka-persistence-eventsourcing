@@ -26,7 +26,7 @@ class VehicleAggregate(id: String) extends AggregateRoot {
   import AggregateRoot._
   import VehicleAggregate._
 
-  override def processorId = id
+  override def persistenceId = id
 
   override def updateState(evt: AggregateRoot.Event): Unit = evt match {
     case VehicleInitialized(reg, col) =>
@@ -43,17 +43,15 @@ class VehicleAggregate(id: String) extends AggregateRoot {
     case VehicleRemoved =>
       context.become(removed)
       state = Removed
-    case _ =>
-      log.debug("An attempt to apply unsupported event was made.")
   }
 
   val initial: Receive = {
     case Initialize(reg, col) =>
       persist(VehicleInitialized(reg, col))(afterEventPersisted)
     case GetState =>
-      respond
-    case Kill =>
-      self ! PoisonPill
+      respond()
+    case KillAggregate =>
+      context.stop(self)
   }
   
   val created: Receive = {
@@ -64,16 +62,16 @@ class VehicleAggregate(id: String) extends AggregateRoot {
     case Remove =>
       persist(VehicleRemoved)(afterEventPersisted)
     case GetState =>
-      respond
-    case Kill =>
-      self ! PoisonPill
+      respond()
+    case KillAggregate =>
+      context.stop(self)
   }
   
   val removed: Receive = {
     case GetState =>
-      respond
-    case Kill =>
-      self ! PoisonPill
+      respond()
+    case KillAggregate =>
+      context.stop(self)
   }
 
   val receiveCommand: Receive = initial

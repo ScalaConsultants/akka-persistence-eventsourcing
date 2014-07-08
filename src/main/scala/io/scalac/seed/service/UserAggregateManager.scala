@@ -1,7 +1,7 @@
 package io.scalac.seed.service
 
 import akka.actor._
-import io.scalac.seed.domain.{UserAggregate, AggregateRoot}
+import io.scalac.seed.domain._
 
 object UserAggregateManager {
 

@@ -2,9 +2,7 @@ package io.scalac.seed.route
 
 import akka.actor._
 import io.scalac.seed.domain.UserAggregate
-import io.scalac.seed.service.{UserAggregateManager, AggregateManager}
-import scala.concurrent.ExecutionContext
-import ExecutionContext.Implicits.global
+import io.scalac.seed.service._
 import spray.httpx.Json4sSupport
 import spray.routing._
 import spray.routing.authentication.BasicAuth

@@ -1,17 +1,18 @@
 package io.scalac.seed.route
 
+import scala.concurrent.Await
+import scala.concurrent.duration._
+import scala.language.postfixOps
+
 import akka.pattern.ask
 import akka.util.Timeout
 import com.github.t3hnar.bcrypt._
 import io.scalac.seed.domain.UserAggregate.User
-import io.scalac.seed.service.{UserAggregateManager, VehicleAggregateManager}
-import io.scalac.seed.service.UserAggregateManager.{GetUser, RegisterUser}
+import io.scalac.seed.service.UserAggregateManager
+import io.scalac.seed.service.UserAggregateManager._
 import org.json4s.DefaultFormats
-import org.scalatest.{BeforeAndAfterAll, Matchers, FlatSpec}
-import scala.concurrent.Await
-import scala.concurrent.duration._
-import scala.language.postfixOps
-import spray.http.{BasicHttpCredentials, StatusCodes}
+import org.scalatest._
+import spray.http._
 import spray.testkit.ScalatestRouteTest
 
 class UserRouteSpec extends FlatSpec with ScalatestRouteTest with Matchers with UserRoute with BeforeAndAfterAll {
@@ -20,6 +21,8 @@ class UserRouteSpec extends FlatSpec with ScalatestRouteTest with Matchers with 
 
   implicit val timeout = Timeout(2.seconds)
 
+  implicit def executionContext = system.dispatcher
+  
   def actorRefFactory = system
 
   val userAggregateManager = system.actorOf(UserAggregateManager.props)
