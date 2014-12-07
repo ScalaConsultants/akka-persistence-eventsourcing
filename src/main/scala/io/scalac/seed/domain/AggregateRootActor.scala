@@ -6,21 +6,12 @@ import io.scalac.seed.common.Acknowledge
 
 object AggregateRootActor {
 
-  trait State
-  case object Uninitialized extends State
-  case object Removed extends State
-
-  trait Event
-
-  trait Command
-  case object Remove extends Command
-  case object GetState extends Command
 
   /**
    * We don't want the aggregate to be killed if it hasn't fully restored yet,
    * thus we need some non AutoReceivedMessage that can be handled by akka persistence.
    */
-  case object KillAggregate extends Command
+  case object KillAggregate
 
   /**
    * Specifies how many events should be processed before new snapshot is taken.
@@ -34,21 +25,16 @@ object AggregateRootActor {
  *
  */
 trait AggregateRootActor extends PersistentActor with ActorLogging {
+  this: AggregateRoot ⇒
+
 
   import AggregateRootActor._
+  import AggregateRoot._
 
-  override def persistenceId: String
-
-  protected var state: State = Uninitialized
+  override def persistenceId = aggregateId
 
   private var eventsSinceLastSnapshot = 0
 
-  /**
-   * Updates internal processor state according to event that is to be applied.
-   *
-   * @param evt Event to apply
-   */
-  def updateState(evt: Event): Unit
 
   /**
    * This method should be used as a callback handler for persist() method.
@@ -72,7 +58,11 @@ trait AggregateRootActor extends PersistentActor with ActorLogging {
   }
 
   protected def respond(): Unit = {
-    sender() ! state
+    respond(state)
+  }
+
+  def respond(response: Any) {
+    sender() ! response // This can be inefficient if state is huge and distributed outside jvm.
     context.parent ! Acknowledge(persistenceId)
   }
 
@@ -88,6 +78,18 @@ trait AggregateRootActor extends PersistentActor with ActorLogging {
       log.debug("recovering aggregate from snapshot")
   }
 
-  protected def restoreFromSnapshot(metadata: SnapshotMetadata, state: State)
+  def restoreFromSnapshot(metadata: SnapshotMetadata, state: State) = {
+    restore(state)
+  }
+
+  val receiveCommand: Receive = {
+    case command: Command ⇒ {
+      stateBehavior.apply(command) match {
+        case event: Event ⇒ persist(event)(afterEventPersisted)
+        case result ⇒ respond(result)
+      }
+    }
+    case KillAggregate ⇒ context.stop(self)
+  }
 
 }

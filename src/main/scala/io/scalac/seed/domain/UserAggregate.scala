@@ -1,13 +1,11 @@
 package io.scalac.seed.domain
 
 import akka.actor._
-import akka.persistence.SnapshotMetadata
 import com.github.t3hnar.bcrypt._
-import io.scalac.seed.domain.AggregateRootActor._
 
 object UserAggregate {
 
-  import AggregateRootActor._
+  import AggregateRoot._
 
   case class User(id: String, pass: String = "") extends State
 
@@ -18,67 +16,64 @@ object UserAggregate {
   case class UserPasswordChanged(pass: String) extends Event
   case object UserRemoved extends Event
 
-  def props(id: String): Props = Props(new UserAggregate(id))
+  def props(id: String): Props = Props(new UserAggregateActor(id))
 }
 
-class UserAggregate(id: String) extends AggregateRootActor {
+class UserAggregateActor(id: String) extends UserAggregate(id) with AggregateRootActor;
+
+class UserAggregate(id: String) extends AggregateRoot {
+
 
   import UserAggregate._
+  import AggregateRoot._
 
-  override def persistenceId = id
+  override def aggregateId = id
 
-  override def updateState(evt: AggregateRootActor.Event): Unit = evt match {
+  override def updateState(evt: AggregateRoot.Event): Unit = evt match {
     case UserInitialized(pass) =>
-      context.become(created)
-      state = User(id, pass)
+      _stateBehavior = created
+      _state = User(id, pass)
     case UserPasswordChanged(newPass) =>
-      state match {
-        case s: User => state = s.copy(pass = newPass)
+      _state match {
+        case s: User => _state = s.copy(pass = newPass)
         case _ => //nothing
       }
     case UserRemoved =>
-      context.become(removed)
-      state = Removed
+      _stateBehavior = removed
+      _state = Removed
   }
 
-  val initial: Receive = {
+  val initial: StateBehavior = {
     case Initialize(pass) =>
       val encryptedPass = pass.bcrypt
-      persist(UserInitialized(encryptedPass))(afterEventPersisted)
+      UserInitialized(encryptedPass)
     case GetState =>
-      respond()
-    case KillAggregate =>
-      context.stop(self)
+      _state
   }
 
-  val created: Receive = {
+  val created: StateBehavior = {
     case Remove =>
-      persist(UserRemoved)(afterEventPersisted)
+      UserRemoved
     case ChangePassword(newPass) =>
       val newPassEncrypted = newPass.bcrypt
-      persist(UserPasswordChanged(newPassEncrypted))(afterEventPersisted)
+      UserPasswordChanged(newPassEncrypted)
     case GetState =>
-      respond()
-    case KillAggregate =>
-      context.stop(self)
+      _state
   }
 
-  val removed: Receive = {
+  val removed: StateBehavior = {
     case GetState =>
-      respond()
-    case KillAggregate =>
-      context.stop(self)
+      _state
   }
 
-  val receiveCommand: Receive = initial
-
-  override def restoreFromSnapshot(metadata: SnapshotMetadata, state: AggregateRootActor.State) = {
-    this.state = state
+  override def restore(stateToRestore: AggregateRoot.State) = {
+    this._state = state
     state match {
-      case Uninitialized => context become initial
-      case Removed => context become removed
-      case _: User => context become created
+      case Uninitialized => _stateBehavior = initial
+      case Removed => _stateBehavior = removed
+      case _: User => _stateBehavior = created
     }
   }
 
+  var _stateBehavior = initial
 }

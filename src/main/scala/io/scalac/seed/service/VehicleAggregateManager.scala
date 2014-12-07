@@ -19,7 +19,7 @@ object VehicleAggregateManager {
 
 class VehicleAggregateManager extends AggregateManager {
 
-  import AggregateRootActor._
+  import AggregateRoot._
   import VehicleAggregateManager._
   import VehicleAggregate._
 

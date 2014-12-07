@@ -5,8 +5,8 @@ import scala.reflect.ClassTag
 
 import akka.actor._
 import io.scalac.seed.common.Error
-import io.scalac.seed.domain.{AggregateRootActor, AggregateRootActor$}
-import io.scalac.seed.domain.AggregateRootActor.{Removed, Uninitialized}
+import io.scalac.seed.domain.{AggregateRoot}
+import io.scalac.seed.domain.AggregateRoot.{Removed, Uninitialized}
 import io.scalac.seed.service.AggregateManager
 import org.json4s.DefaultFormats
 import spray.http.StatusCode
@@ -16,7 +16,7 @@ import spray.routing.{HttpService, RequestContext}
 
 object RequestHandler {
 
-  case class RegisterRequestActor[S <: AggregateRootActor.State](
+  case class RegisterRequestActor[S <: AggregateRoot.State](
       r: RequestContext, 
       target: ActorRef, 
       message: AggregateManager.Command)(implicit tag: ClassTag[S]) extends RequestHandler {
@@ -25,7 +25,7 @@ object RequestHandler {
     }
   }
 
-  case class UpdateRequestActor[S <: AggregateRootActor.State](
+  case class UpdateRequestActor[S <: AggregateRoot.State](
       r: RequestContext, 
       target: ActorRef, 
       message: AggregateManager.Command)(implicit tag: ClassTag[S]) extends RequestHandler {
@@ -45,7 +45,7 @@ object RequestHandler {
     }
   }
 
-  case class GetRequestActor[S <: AggregateRootActor.State](
+  case class GetRequestActor[S <: AggregateRoot.State](
       r: RequestContext, 
       target: ActorRef, 
       message: AggregateManager.Command)(implicit tag: ClassTag[S]) extends RequestHandler {
@@ -114,13 +114,13 @@ trait RequestHandlerCreator {
 
   import RequestHandler._
 
-  def handleRegister[S <: AggregateRootActor.State](
+  def handleRegister[S <: AggregateRoot.State](
       r: RequestContext, 
       target: ActorRef, 
       message: AggregateManager.Command)(implicit tag: ClassTag[S]) =
     actorRefFactory.actorOf(Props(RegisterRequestActor[S](r, target, message)))
 
-  def handleUpdate[S <: AggregateRootActor.State](
+  def handleUpdate[S <: AggregateRoot.State](
       r: RequestContext, 
       target: ActorRef, 
       message: AggregateManager.Command)(implicit tag: ClassTag[S]) =
@@ -132,7 +132,7 @@ trait RequestHandlerCreator {
       message: AggregateManager.Command) =
     actorRefFactory.actorOf(Props(DeleteRequestActor(r, target, message)))
 
-  def handleGet[S <: AggregateRootActor.State](
+  def handleGet[S <: AggregateRoot.State](
       r: RequestContext, 
       target: ActorRef, 
       message: AggregateManager.Command)(implicit tag: ClassTag[S]) =

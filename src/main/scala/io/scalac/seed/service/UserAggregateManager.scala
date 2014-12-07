@@ -16,7 +16,7 @@ object UserAggregateManager {
 
 class UserAggregateManager extends AggregateManager {
 
-  import AggregateRootActor._
+  import AggregateRoot._
   import UserAggregateManager._
   import UserAggregate._
 
