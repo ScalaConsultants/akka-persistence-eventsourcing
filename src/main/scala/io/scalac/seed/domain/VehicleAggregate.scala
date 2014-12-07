@@ -5,7 +5,7 @@ import akka.persistence._
 
 object VehicleAggregate {
 
-  import AggregateRoot._
+  import AggregateRootActor._
 
   case class Vehicle(id: String, regNumber: String = "", color: String = "") extends State
 
@@ -21,14 +21,14 @@ object VehicleAggregate {
   def props(id: String): Props = Props(new VehicleAggregate(id))
 }
 
-class VehicleAggregate(id: String) extends AggregateRoot {
+class VehicleAggregate(id: String) extends AggregateRootActor {
 
-  import AggregateRoot._
+  import AggregateRootActor._
   import VehicleAggregate._
 
   override def persistenceId = id
 
-  override def updateState(evt: AggregateRoot.Event): Unit = evt match {
+  override def updateState(evt: AggregateRootActor.Event): Unit = evt match {
     case VehicleInitialized(reg, col) =>
       context.become(created)
       state = Vehicle(id, reg, col)

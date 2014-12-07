@@ -1,7 +1,7 @@
 package io.scalac.seed.service
 
 import akka.actor._
-import io.scalac.seed.domain.AggregateRoot
+import io.scalac.seed.domain.{AggregateRootActor, AggregateRootActor$}
 
 object AggregateManager {
 
@@ -10,7 +10,7 @@ object AggregateManager {
   val maxChildren = 40
   val childrenToKillAtOnce = 20
 
-  case class PendingCommand(sender: ActorRef, targetProcessorId: String, command: AggregateRoot.Command)
+  case class PendingCommand(sender: ActorRef, targetProcessorId: String, command: AggregateRootActor.Command)
 }
 
 /**
@@ -21,7 +21,7 @@ object AggregateManager {
  */
 trait AggregateManager extends Actor with ActorLogging {
 
-  import AggregateRoot._
+  import AggregateRootActor._
   import AggregateManager._
 
   import scala.collection.immutable._
@@ -56,7 +56,7 @@ trait AggregateManager extends Actor with ActorLogging {
    * @param aggregateId Aggregate id
    * @param command Command that should be passed to aggregate
    */
-  def processAggregateCommand(aggregateId: String, command: AggregateRoot.Command) = {
+  def processAggregateCommand(aggregateId: String, command: AggregateRootActor.Command) = {
     val maybeChild = context child aggregateId
     maybeChild match {
       case Some(child) if childrenBeingTerminated contains child =>

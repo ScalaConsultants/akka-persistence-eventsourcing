@@ -3,11 +3,11 @@ package io.scalac.seed.domain
 import akka.actor._
 import akka.persistence.SnapshotMetadata
 import com.github.t3hnar.bcrypt._
-import io.scalac.seed.domain.AggregateRoot._
+import io.scalac.seed.domain.AggregateRootActor._
 
 object UserAggregate {
 
-  import AggregateRoot._
+  import AggregateRootActor._
 
   case class User(id: String, pass: String = "") extends State
 
@@ -21,13 +21,13 @@ object UserAggregate {
   def props(id: String): Props = Props(new UserAggregate(id))
 }
 
-class UserAggregate(id: String) extends AggregateRoot {
+class UserAggregate(id: String) extends AggregateRootActor {
 
   import UserAggregate._
 
   override def persistenceId = id
 
-  override def updateState(evt: AggregateRoot.Event): Unit = evt match {
+  override def updateState(evt: AggregateRootActor.Event): Unit = evt match {
     case UserInitialized(pass) =>
       context.become(created)
       state = User(id, pass)
@@ -72,7 +72,7 @@ class UserAggregate(id: String) extends AggregateRoot {
 
   val receiveCommand: Receive = initial
 
-  override def restoreFromSnapshot(metadata: SnapshotMetadata, state: AggregateRoot.State) = {
+  override def restoreFromSnapshot(metadata: SnapshotMetadata, state: AggregateRootActor.State) = {
     this.state = state
     state match {
       case Uninitialized => context become initial

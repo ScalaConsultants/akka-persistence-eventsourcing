@@ -4,7 +4,7 @@ import akka.actor._
 import akka.persistence._
 import io.scalac.seed.common.Acknowledge
 
-object AggregateRoot {
+object AggregateRootActor {
 
   trait State
   case object Uninitialized extends State
@@ -33,9 +33,9 @@ object AggregateRoot {
  * It includes such functionality as: snapshot management, publishing applied events to Event Bus, handling processor recovery.
  *
  */
-trait AggregateRoot extends PersistentActor with ActorLogging {
+trait AggregateRootActor extends PersistentActor with ActorLogging {
 
-  import AggregateRoot._
+  import AggregateRootActor._
 
   override def persistenceId: String
 
