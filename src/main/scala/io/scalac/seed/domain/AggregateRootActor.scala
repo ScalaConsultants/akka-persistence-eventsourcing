@@ -62,7 +62,7 @@ trait AggregateRootActor extends PersistentActor with ActorLogging {
   }
 
   def respond(response: Any) {
-    sender() ! response // This can be inefficient if state is huge and distributed outside jvm.
+    sender() ! response // This can be inefficient if state is huge and sent outside jvm.
     context.parent ! Acknowledge(persistenceId)
   }
 

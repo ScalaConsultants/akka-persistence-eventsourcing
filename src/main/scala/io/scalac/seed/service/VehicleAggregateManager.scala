@@ -1,41 +1,38 @@
 package io.scalac.seed.service
 
-import akka.actor._
+import io.scalac.seed.domain.AggregateRoot.{Remove, GetState}
 import io.scalac.seed.domain._
 import java.util.UUID
 
-object VehicleAggregateManager {
+import io.scalac.seed.service.CommandAdapter.Command
 
-  import AggregateManager._
+object VehicleCommandAdapter {
 
   case class RegisterVehicle(regNumber: String, color: String) extends Command
   case class GetVehicle(id: String) extends Command
   case class UpdateRegNumber(id: String, regNumber: String) extends Command
   case class UpdateColor(id: String, color: String) extends Command
   case class DeleteVehicle(id: String) extends Command
-  
-  def props: Props = Props(new VehicleAggregateManager)
+
 }
 
-class VehicleAggregateManager extends AggregateManager {
+class VehicleCommandAdapter extends CommandAdapter {
 
-  import AggregateRoot._
-  import VehicleAggregateManager._
+  import VehicleCommandAdapter._
   import VehicleAggregate._
 
-  def processCommand = {
+  def adapt(command: Command) : (String, AggregateRoot.Command) = command match {
     case RegisterVehicle(rn, col) =>
       val id = UUID.randomUUID().toString()
-      processAggregateCommand(id, Initialize(rn, col))
+      (id, Initialize(rn, col))
     case GetVehicle(id) =>
-      processAggregateCommand(id, GetState)
+      (id, GetState)
     case UpdateRegNumber(id, regNumber) =>
-      processAggregateCommand(id, ChangeRegNumber(regNumber))
+      (id, ChangeRegNumber(regNumber))
     case UpdateColor(id, color) =>
-      processAggregateCommand(id, ChangeColor(color))
+      (id, ChangeColor(color))
     case DeleteVehicle(id) =>
-      processAggregateCommand(id, Remove)
+      (id, Remove)
   }
 
-  override def aggregateProps(id: String) = VehicleAggregate.props(id)
 }

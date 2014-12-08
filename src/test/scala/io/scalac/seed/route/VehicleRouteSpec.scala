@@ -6,8 +6,8 @@ import io.scalac.seed.domain.AggregateRoot.Removed
 import io.scalac.seed.domain.VehicleAggregate
 import io.scalac.seed.service.{UserAggregateManager, VehicleAggregateManager}
 import VehicleAggregate.Vehicle
-import VehicleAggregateManager.{GetVehicle, RegisterVehicle}
-import io.scalac.seed.service.UserAggregateManager.RegisterUser
+import io.scalac.seed.service.VehicleCommandAdapter.{GetVehicle, RegisterVehicle}
+import io.scalac.seed.service.UserCommandAdapter.RegisterUser
 import java.util.UUID
 import org.json4s.{DefaultFormats, JObject}
 import org.scalatest.{BeforeAndAfterAll, Matchers, FlatSpec}

@@ -1,35 +1,31 @@
 package io.scalac.seed.service
 
-import akka.actor._
+import io.scalac.seed.domain.AggregateRoot.GetState
 import io.scalac.seed.domain._
+import io.scalac.seed.service.CommandAdapter.Command
 
-object UserAggregateManager {
-
-  import AggregateManager._
+object UserCommandAdapter {
 
   case class RegisterUser(name: String, pass: String) extends Command
   case class GetUser(name: String) extends Command
   case class ChangeUserPassword(id: String, pass: String) extends Command
 
-  def props: Props = Props(new UserAggregateManager)
 }
 
-class UserAggregateManager extends AggregateManager {
+class UserCommandAdapter extends CommandAdapter {
 
-  import AggregateRoot._
-  import UserAggregateManager._
+  import UserCommandAdapter._
   import UserAggregate._
 
-  def processCommand = {
+  def adapt(command: Command) : (String, AggregateRoot.Command) = command match {
     case RegisterUser(name, pass) =>
-      val id = "user-" + name
-      processAggregateCommand(id, Initialize(pass))
+      (nameToId(name), Initialize(pass))
     case GetUser(name) =>
-      val id = "user-" + name
-      processAggregateCommand(id, GetState)
+      (nameToId(name), GetState)
     case ChangeUserPassword(id, pass) =>
-      processAggregateCommand(id, ChangePassword(pass))
+      (id, ChangePassword(pass))
   }
 
-  override def aggregateProps(id: String) = UserAggregate.props(id)
+  def nameToId(name:String):String = "user-" + name
+
 }

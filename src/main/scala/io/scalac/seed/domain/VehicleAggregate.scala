@@ -1,7 +1,5 @@
 package io.scalac.seed.domain
 
-import akka.actor._
-
 object VehicleAggregate {
 
   import AggregateRoot._
@@ -17,10 +15,7 @@ object VehicleAggregate {
   case class ColorChanged(color: String) extends Event
   case object VehicleRemoved extends Event
 
-  def props(id: String): Props = Props(new VehicleAggregateActor(id))
 }
-
-class VehicleAggregateActor(id: String) extends VehicleAggregate(id) with AggregateRootActor
 
 class VehicleAggregate(id: String) extends AggregateRoot {
 

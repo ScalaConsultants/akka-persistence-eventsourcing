@@ -1,6 +1,5 @@
 package io.scalac.seed.domain
 
-import akka.actor._
 import com.github.t3hnar.bcrypt._
 
 object UserAggregate {
@@ -16,10 +15,7 @@ object UserAggregate {
   case class UserPasswordChanged(pass: String) extends Event
   case object UserRemoved extends Event
 
-  def props(id: String): Props = Props(new UserAggregateActor(id))
 }
-
-class UserAggregateActor(id: String) extends UserAggregate(id) with AggregateRootActor;
 
 class UserAggregate(id: String) extends AggregateRoot {
 

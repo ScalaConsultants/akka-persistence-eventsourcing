@@ -7,7 +7,7 @@ import akka.actor._
 import io.scalac.seed.common.Error
 import io.scalac.seed.domain.{AggregateRoot}
 import io.scalac.seed.domain.AggregateRoot.{Removed, Uninitialized}
-import io.scalac.seed.service.AggregateManager
+import io.scalac.seed.service.{CommandAdapter, AggregateManager}
 import org.json4s.DefaultFormats
 import spray.http.StatusCode
 import spray.http.StatusCodes._
@@ -19,7 +19,7 @@ object RequestHandler {
   case class RegisterRequestActor[S <: AggregateRoot.State](
       r: RequestContext, 
       target: ActorRef, 
-      message: AggregateManager.Command)(implicit tag: ClassTag[S]) extends RequestHandler {
+      message: CommandAdapter.Command)(implicit tag: ClassTag[S]) extends RequestHandler {
     override def processResult: Receive = {
       case tag(res) => complete(Created, res)
     }
@@ -28,7 +28,7 @@ object RequestHandler {
   case class UpdateRequestActor[S <: AggregateRoot.State](
       r: RequestContext, 
       target: ActorRef, 
-      message: AggregateManager.Command)(implicit tag: ClassTag[S]) extends RequestHandler {
+      message: CommandAdapter.Command)(implicit tag: ClassTag[S]) extends RequestHandler {
     override def processResult: Receive = {
       case tag(res) => complete(OK, res)
       case Uninitialized | Removed => complete(NotFound, "")
@@ -38,7 +38,7 @@ object RequestHandler {
   case class DeleteRequestActor(
       r: RequestContext, 
       target: ActorRef, 
-      message: AggregateManager.Command) extends RequestHandler {
+      message: CommandAdapter.Command) extends RequestHandler {
     override def processResult: Receive = {
       case Uninitialized => complete(NotFound, "")
       case Removed => complete(NoContent, "")
@@ -48,7 +48,7 @@ object RequestHandler {
   case class GetRequestActor[S <: AggregateRoot.State](
       r: RequestContext, 
       target: ActorRef, 
-      message: AggregateManager.Command)(implicit tag: ClassTag[S]) extends RequestHandler {
+      message: CommandAdapter.Command)(implicit tag: ClassTag[S]) extends RequestHandler {
     override def processResult: Receive = {
       case tag(res) => complete(OK, res)
       case Uninitialized | Removed => complete(NotFound, "")
@@ -71,7 +71,7 @@ trait RequestHandler extends Actor with ActorLogging with Json4sSupport {
 
   def r: RequestContext
   def target: ActorRef
-  def message: AggregateManager.Command
+  def message: CommandAdapter.Command
 
   setReceiveTimeout(2.seconds)
   target ! message
@@ -117,25 +117,25 @@ trait RequestHandlerCreator {
   def handleRegister[S <: AggregateRoot.State](
       r: RequestContext, 
       target: ActorRef, 
-      message: AggregateManager.Command)(implicit tag: ClassTag[S]) =
+      message: CommandAdapter.Command)(implicit tag: ClassTag[S]) =
     actorRefFactory.actorOf(Props(RegisterRequestActor[S](r, target, message)))
 
   def handleUpdate[S <: AggregateRoot.State](
       r: RequestContext, 
       target: ActorRef, 
-      message: AggregateManager.Command)(implicit tag: ClassTag[S]) =
+      message: CommandAdapter.Command)(implicit tag: ClassTag[S]) =
     actorRefFactory.actorOf(Props(UpdateRequestActor[S](r, target, message)))
 
   def handleDelete(
       r: RequestContext, 
       target: ActorRef, 
-      message: AggregateManager.Command) =
+      message: CommandAdapter.Command) =
     actorRefFactory.actorOf(Props(DeleteRequestActor(r, target, message)))
 
   def handleGet[S <: AggregateRoot.State](
       r: RequestContext, 
       target: ActorRef, 
-      message: AggregateManager.Command)(implicit tag: ClassTag[S]) =
+      message: CommandAdapter.Command)(implicit tag: ClassTag[S]) =
     actorRefFactory.actorOf(Props(GetRequestActor[S](r, target, message)))
 
 }

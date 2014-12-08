@@ -15,7 +15,7 @@ trait VehicleRoute extends HttpService with Json4sSupport with RequestHandlerCre
 
   import VehicleRoute._
 
-  import VehicleAggregateManager._
+  import VehicleCommandAdapter._
 
   val vehicleAggregateManager: ActorRef
 
@@ -58,16 +58,16 @@ trait VehicleRoute extends HttpService with Json4sSupport with RequestHandlerCre
       }
     }
 
-  private def serveUpdate(message : AggregateManager.Command): Route =
+  private def serveUpdate(message : CommandAdapter.Command): Route =
     ctx => handleUpdate[VehicleAggregate.Vehicle](ctx, vehicleAggregateManager, message)
 
-  private def serveRegister(message : AggregateManager.Command): Route =
+  private def serveRegister(message : CommandAdapter.Command): Route =
     ctx => handleRegister[VehicleAggregate.Vehicle](ctx, vehicleAggregateManager, message)
 
-  private def serveDelete(message : AggregateManager.Command): Route =
+  private def serveDelete(message : CommandAdapter.Command): Route =
     ctx => handleDelete(ctx, vehicleAggregateManager, message)
 
-  private def serveGet(message : AggregateManager.Command): Route =
+  private def serveGet(message : CommandAdapter.Command): Route =
     ctx => handleGet[VehicleAggregate.Vehicle](ctx, vehicleAggregateManager, message)
 
 }
