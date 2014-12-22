@@ -25,14 +25,10 @@ class VehicleCommandAdapter extends CommandAdapter {
     case RegisterVehicle(rn, col) =>
       val id = UUID.randomUUID().toString()
       (id, Initialize(rn, col))
-    case GetVehicle(id) =>
-      (id, GetState)
-    case UpdateRegNumber(id, regNumber) =>
-      (id, ChangeRegNumber(regNumber))
-    case UpdateColor(id, color) =>
-      (id, ChangeColor(color))
-    case DeleteVehicle(id) =>
-      (id, Remove)
+    case GetVehicle(id) => (id, GetState)
+    case UpdateRegNumber(id, regNumber) => (id, ChangeRegNumber(regNumber))
+    case UpdateColor(id, color) => (id, ChangeColor(color))
+    case DeleteVehicle(id) => (id, Remove)
   }
 
 }

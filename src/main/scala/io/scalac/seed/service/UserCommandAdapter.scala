@@ -18,12 +18,9 @@ class UserCommandAdapter extends CommandAdapter {
   import UserAggregate._
 
   def adapt(command: Command) : (String, AggregateRoot.Command) = command match {
-    case RegisterUser(name, pass) =>
-      (nameToId(name), Initialize(pass))
-    case GetUser(name) =>
-      (nameToId(name), GetState)
-    case ChangeUserPassword(id, pass) =>
-      (id, ChangePassword(pass))
+    case RegisterUser(name, pass) => (nameToId(name), Initialize(pass))
+    case GetUser(name) => (nameToId(name), GetState)
+    case ChangeUserPassword(id, pass) => (id, ChangePassword(pass))
   }
 
   def nameToId(name:String):String = "user-" + name

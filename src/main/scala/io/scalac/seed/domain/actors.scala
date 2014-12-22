@@ -7,6 +7,10 @@ trait AggregatePropsProvider {
                                             // caused by mixins, so maybe composition should be used here?
 }
 
+trait AggregateRootProvider {
+  def aggregateRoot(id: String, state: AggregateRoot.State): AggregateRoot
+}
+
 trait UserAggregatePropsProvider extends AggregatePropsProvider{
   def aggregateRootProps(id: String): Props = Props(new UserAggregateActor(id))
 }

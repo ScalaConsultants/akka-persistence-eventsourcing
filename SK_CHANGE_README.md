@@ -19,7 +19,7 @@ AggregateRoot but CommandAdapter does not have an interface which can be called 
 part of refactor is less natural and should be done other way around.
 
 ## Biggest lacks
-- This refactoring will be enough for domain until it will be no call within aggregate root ro some service. In such
+- This refactoring will be enough for domain until it will be no call within aggregate root to some service. In such
 case actor interface will have to be used which can be changed by adding some domain interfaces which should be used
 externally and by domain artifacts and should be implemented using actors (probably by delegation to `!`). After
 introducing this change it'll be possible to really well hide actors presence in system. (And don't get me wrong I have

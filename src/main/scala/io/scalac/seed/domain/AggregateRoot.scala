@@ -1,41 +1,30 @@
 package io.scalac.seed.domain
 
+import io.scalac.seed.domain.AggregateRoot.{Event, StateBehavior, State}
+
 object AggregateRoot {
+
   trait State
+
   case object Uninitialized extends State
+
   case object Removed extends State
 
   trait Event
 
   trait Command
+
   case object Remove extends Command
+
   case object GetState extends Command
 
   type StateBehavior = PartialFunction[Command, Any]
 
 }
 
-trait AggregateRoot {
+abstract class AggregateRoot(val aggregateId: String, val state: State) {
 
-  import AggregateRoot._
+  def updateState(event: Event): State
 
-  def aggregateId: String
-
-  def state :State = _state
-
-  def stateBehavior :StateBehavior = _stateBehavior
-
-  protected var _state: State = Uninitialized
-
-  protected var _stateBehavior: StateBehavior
-
-  /**
-   * Updates internal processor state according to event that is to be applied.
-   *
-   * @param evt Event to apply
-   */
-  def updateState(evt: Event): Unit
-
-  def restore(stateToRestore: State): Unit
-
+  val stateBehavior: StateBehavior
 }
