@@ -1,5 +1,8 @@
 package io.scalac.seed.domain
 
+import io.scalac.seed.domain.AggregateRoot._
+import io.scalac.seed.domain.VehicleAggregate._
+
 object VehicleAggregate {
 
   import AggregateRoot._
@@ -17,62 +20,56 @@ object VehicleAggregate {
 
 }
 
-class VehicleAggregate(id: String) extends AggregateRoot {
+object VehicleAggregateProvider extends AggregateRootProvider{
+  def aggregateRoot(id: String, state: State): AggregateRoot = state match {
+    case Uninitialized ⇒ new VehicleAggregateInitial(id, state)
+    case Removed ⇒ new VehicleAggregateRemoved(id, state)
+    case _: Vehicle ⇒ new VehicleAggregateCreated(id, state)
+  }
+}
 
-  import AggregateRoot._
-  import VehicleAggregate._
-
-  override def aggregateId = id
-
-  override def updateState(evt: AggregateRoot.Event): Unit = evt match {
+abstract class VehicleAggregate(aggregateId: String, state: State) extends AggregateRoot(aggregateId, state) {
+  def updateState(event: Event): State = event match {
     case VehicleInitialized(reg, col) =>
-      _stateBehavior = created
-      _state = Vehicle(id, reg, col)
+      Vehicle(aggregateId, reg, col)
     case RegNumberChanged(reg) => state match {
-      case s: Vehicle => _state = s.copy(regNumber = reg)
-      case _ => //nothing
+      case s: Vehicle => s.copy(regNumber = reg)
+      case _ => state
     }
-    case ColorChanged(col) => state match { 
-      case s: Vehicle => _state = s.copy(color = col)
-      case _ => //nothing
+    case ColorChanged(col) => state match {
+      case s: Vehicle => s.copy(color = col)
+      case _ => state
     }
     case VehicleRemoved =>
-      _stateBehavior = removed
-      _state = Removed
+      Removed
   }
+}
 
-  val initial: StateBehavior = {
+class VehicleAggregateInitial(aggregateId: String, state: State) extends VehicleAggregate(aggregateId, state) {
+  val stateBehavior: StateBehavior = {
     case Initialize(reg, col) =>
       VehicleInitialized(reg, col)
     case GetState =>
-      _state
+      state
   }
-  
-  val created: StateBehavior = {
+}
+
+class VehicleAggregateCreated(aggregateId: String, state: State) extends VehicleAggregate(aggregateId, state) {
+  val stateBehavior: StateBehavior = {
     case ChangeRegNumber(reg) =>
       RegNumberChanged(reg)
-    case ChangeColor(color) => 
+    case ChangeColor(color) =>
       ColorChanged(color)
     case Remove =>
       VehicleRemoved
     case GetState =>
-      _state
+      state
   }
-  
-  val removed: StateBehavior = {
+}
+
+class VehicleAggregateRemoved(aggregateId: String, state: State) extends VehicleAggregate(aggregateId, state) {
+  val stateBehavior: StateBehavior = {
     case GetState =>
-      _state
+      state
   }
-
-  override def restore(stateToRestore: State) = {
-    _state = stateToRestore
-    stateToRestore match {
-      case Uninitialized => _stateBehavior = initial
-      case Removed => _stateBehavior = removed
-      case _: Vehicle => _stateBehavior = created
-    }
-  }
-
-  var _stateBehavior = initial
-
 }

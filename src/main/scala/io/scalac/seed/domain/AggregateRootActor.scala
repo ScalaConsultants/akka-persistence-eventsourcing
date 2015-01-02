@@ -24,7 +24,7 @@ object AggregateRootActor {
  * It includes such functionality as: snapshot management, publishing applied events to Event Bus, handling processor recovery.
  *
  */
-class AggregateRootActor(val aggregateProvider: AggregateRootProvider, var aggregate : AggregateRoot) extends PersistentActor with ActorLogging {
+class AggregateRootActor(val aggregateProvider: AggregateRootProvider, var aggregate: AggregateRoot) extends PersistentActor with ActorLogging {
 
 
   import AggregateRootActor._
@@ -52,12 +52,12 @@ class AggregateRootActor(val aggregateProvider: AggregateRootProvider, var aggre
   }
 
   private def updateAndRespond(evt: Event): Unit = {
-    aggregate = aggregateProvider.aggregateRoot(aggregate.updateState(evt))
+    updateAggregate(aggregate.updateState(evt))
     respond()
   }
 
   protected def respond(): Unit = {
-    respond(aggregate)
+    respond(aggregate.state)
   }
 
   def respond(response: Any) {
@@ -71,14 +71,18 @@ class AggregateRootActor(val aggregateProvider: AggregateRootProvider, var aggre
   override val receiveRecover: Receive = {
     case evt: Event =>
       eventsSinceLastSnapshot += 1
-      aggregate = aggregateProvider.aggregateRoot(aggregate.updateState(evt))
+      updateAggregate(aggregate.updateState(evt))
     case SnapshotOffer(metadata, state: State) =>
       restoreFromSnapshot(metadata, state)
       log.debug("recovering aggregate from snapshot")
   }
 
   def restoreFromSnapshot(metadata: SnapshotMetadata, state: State) = {
-    aggregate = aggregateProvider.aggregateRoot(state)
+    updateAggregate(state)
+  }
+
+  def updateAggregate(state: State) {
+    aggregate = aggregateProvider.aggregateRoot(aggregate.aggregateId, state)
   }
 
   val receiveCommand: Receive = {

@@ -11,25 +11,27 @@ object UserAggregate {
   case class User(id: String, pass: String = "") extends State
 
   case class Initialize(pass: String) extends Command
+
   case class ChangePassword(pass: String) extends Command
 
   case class UserInitialized(pass: String) extends Event
+
   case class UserPasswordChanged(pass: String) extends Event
+
   case object UserRemoved extends Event
 
 }
 
-object UserAggregateProvider extends AggregateRootProvider{
+object UserAggregateProvider extends AggregateRootProvider {
   def aggregateRoot(id: String, state: State): AggregateRoot = state match {
     case Uninitialized ⇒ new UserAggregateInitial(id, state)
     case Removed ⇒ new UserAggregateRemoved(id, state)
     case _: User ⇒ new UserAggregateCreated(id, state)
   }
-
 }
 
 abstract class UserAggregate(aggregateId: String, state: State) extends AggregateRoot(aggregateId, state) {
-  override def updateState(evt: Event): State = evt match {
+  override def updateState(event: Event): State = event match {
     case UserInitialized(pass) =>
       User(aggregateId, pass)
     case UserPasswordChanged(newPass) =>
