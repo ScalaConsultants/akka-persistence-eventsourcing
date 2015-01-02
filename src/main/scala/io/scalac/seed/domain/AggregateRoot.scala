@@ -1,6 +1,6 @@
 package io.scalac.seed.domain
 
-import io.scalac.seed.domain.AggregateRoot.{Event, StateBehavior, State}
+import io.scalac.seed.domain.AggregateRoot._
 
 object AggregateRoot {
 
@@ -18,6 +18,12 @@ object AggregateRoot {
 
   case object GetState extends Command
 
+  trait Accepted
+
+  case class AcceptedEvent(event: Event, newState: State) extends Accepted
+
+  case class AcceptedQuery(state: Any) extends Accepted
+
   type StateBehavior = PartialFunction[Command, Any]
 
 }
@@ -26,5 +32,15 @@ abstract class AggregateRoot(val aggregateId: String, val state: State) {
 
   def updateState(event: Event): State
 
-  val stateBehavior: StateBehavior
+  protected val stateBehavior: StateBehavior
+
+  def acceptEvent:PartialFunction[Command, Accepted] = {
+    case x:Command if stateBehavior.isDefinedAt(x) ⇒ {
+       stateBehavior.apply(x) match {
+         case event:Event ⇒ AcceptedEvent(event, updateState(event))
+         case state ⇒ AcceptedQuery(state)
+       }
+    }
+  }
+
 }

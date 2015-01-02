@@ -40,19 +40,19 @@ class AggregateRootActor(val aggregateProvider: AggregateRootProvider, var aggre
    *
    * @param evt Event that has been persisted
    */
-  protected def afterEventPersisted(evt: Event): Unit = {
+  protected def afterEventPersisted(newState: State)(evt: Event): Unit = {
     eventsSinceLastSnapshot += 1
+    updateAndRespond(newState)
     if (eventsSinceLastSnapshot >= eventsPerSnapshot) {
       log.debug("{} events reached, saving snapshot", eventsPerSnapshot)
       saveSnapshot(aggregate)
       eventsSinceLastSnapshot = 0
     }
-    updateAndRespond(evt)
     publish(evt)
   }
 
-  private def updateAndRespond(evt: Event): Unit = {
-    updateAggregate(aggregate.updateState(evt))
+  private def updateAndRespond(newState: State): Unit = {
+    updateAggregate(newState)
     respond()
   }
 
@@ -87,9 +87,9 @@ class AggregateRootActor(val aggregateProvider: AggregateRootProvider, var aggre
 
   val receiveCommand: Receive = {
     case command: Command ⇒ {
-      aggregate.stateBehavior.apply(command) match {
-        case event: Event ⇒ persist(event)(afterEventPersisted)
-        case result ⇒ respond(result)
+      aggregate.acceptEvent.apply(command) match {
+        case AcceptedEvent(event, newState) ⇒ persist(event)(afterEventPersisted (newState))
+        case AcceptedQuery(result) ⇒ respond(result)
       }
     }
     case KillAggregate ⇒ context.stop(self)
