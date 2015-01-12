@@ -18,29 +18,28 @@ object AggregateRoot {
 
   case object GetState extends Command
 
-  trait Accepted
+}
 
-  case class AcceptedEvent(event: Event, newState: State) extends Accepted
+trait AggregateRoot {
 
-  case class AcceptedQuery(state: Any) extends Accepted
+  def calculateState(id: String, state: State, event: Event): State
 
-  type StateBehavior = PartialFunction[Command, Any]
+  def calculateEvents(id: String, state: State, command: Command): Event
+
+  def executeQuery(id: String, state:State, query: Command): State
 
 }
 
-abstract class AggregateRoot(val aggregateId: String, val state: State) {
+class DefaultAggregateRootAdapter extends AggregateRootAdapter {
+  this: AggregateRoot ⇒
 
-  def updateState(event: Event): State
-
-  protected val stateBehavior: StateBehavior
-
-  def acceptEvent:PartialFunction[Command, Accepted] = {
-    case x:Command if stateBehavior.isDefinedAt(x) ⇒ {
-       stateBehavior.apply(x) match {
-         case event:Event ⇒ AcceptedEvent(event, updateState(event))
-         case state ⇒ AcceptedQuery(state)
-       }
-    }
+  def acceptCommand(id: String, state: State, afterEventReaction: (State, Event) ⇒ Unit, queryReaction: (State) ⇒ Unit): PartialFunction[Command, Unit] =
+  {
+    case GetState ⇒ queryReaction(executeQuery(id, state, GetState))
+    case command: Command ⇒ 
+      val events = calculateEvents(id, state, command)
+      afterEventReaction(calculateState(id, state, events), events)
   }
 
+  def recover(id: String, state: State, event: Event): State = calculateState(id, state, event)
 }

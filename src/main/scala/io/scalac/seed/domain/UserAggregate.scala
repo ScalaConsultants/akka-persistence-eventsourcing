@@ -22,53 +22,25 @@ object UserAggregate {
 
 }
 
-object UserAggregateProvider extends AggregateRootProvider {
-  def aggregateRoot(id: String, state: State): AggregateRoot = state match {
-    case Uninitialized ⇒ new UserAggregateInitial(id, state)
-    case Removed ⇒ new UserAggregateRemoved(id, state)
-    case _: User ⇒ new UserAggregateCreated(id, state)
+trait UserAggregateRoot extends AggregateRoot {
+  def calculateState(id: String, state: State, event: Event): State = (state, event) match {
+    case (Uninitialized, UserInitialized(pass)) ⇒ User(id, pass)
+    case (s: User, UserPasswordChanged(newPass)) ⇒ s.copy(pass = newPass)
+    case (_, UserPasswordChanged(_)) ⇒ state
+    case (_, UserRemoved) ⇒ Removed
+    case _ ⇒ ???
   }
-}
 
-abstract class UserAggregate(aggregateId: String, state: State) extends AggregateRoot(aggregateId, state) {
-  override def updateState(event: Event): State = event match {
-    case UserInitialized(pass) =>
-      User(aggregateId, pass)
-    case UserPasswordChanged(newPass) =>
-      state match {
-        case s: User => s.copy(pass = newPass)
-        case _ => state
-      }
-    case UserRemoved =>
-      Removed
-  }
-}
+  def executeQuery(id: String, state: State, query: Command): State = state
 
-class UserAggregateInitial(aggregateId: String, state: State) extends UserAggregate(aggregateId, state) {
-  override val stateBehavior: StateBehavior = {
-    case Initialize(pass) =>
+  def calculateEvents(id: String, state: State, command: Command): Event = (state, command) match {
+    case (Uninitialized, Initialize(pass)) ⇒
       val encryptedPass = pass.bcrypt
       UserInitialized(encryptedPass)
-    case GetState =>
-      state
-  }
-}
-
-class UserAggregateCreated(aggregateId: String, state: State) extends UserAggregate(aggregateId, state) {
-  override val stateBehavior: StateBehavior = {
-    case Remove =>
-      UserRemoved
-    case ChangePassword(newPass) =>
+    case (_ : User, ChangePassword(newPass)) ⇒
       val newPassEncrypted = newPass.bcrypt
       UserPasswordChanged(newPassEncrypted)
-    case GetState =>
-      state
-  }
-}
-
-class UserAggregateRemoved(aggregateId: String, state: State) extends UserAggregate(aggregateId, state) {
-  override val stateBehavior: StateBehavior = {
-    case GetState =>
-      state
+    case (_ : User, Remove) ⇒ UserRemoved
+    case _ ⇒ ???
   }
 }
