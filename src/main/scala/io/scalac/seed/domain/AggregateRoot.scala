@@ -30,7 +30,7 @@ trait AggregateRoot {
 
 }
 
-class DefaultAggregateRootAdapter extends AggregateRootAdapter {
+class DefaultAggregateRootAdapter extends AggregateRootAdapter[State, Command, Event] {
   this: AggregateRoot ⇒
 
   def acceptCommand(id: String, state: State, afterEventReaction: (State, Event) ⇒ Unit, queryReaction: (State) ⇒ Unit): PartialFunction[Command, Unit] =

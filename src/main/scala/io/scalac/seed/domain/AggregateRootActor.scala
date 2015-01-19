@@ -2,8 +2,9 @@ package io.scalac.seed.domain
 
 import akka.actor._
 import akka.persistence._
-import io.scalac.seed.common.Acknowledge
-import io.scalac.seed.domain.AggregateRoot.{Command, Event, State}
+import _root_.io.scalac.seed.common.Acknowledge
+
+import scala.reflect._
 
 object AggregateRootActor {
 
@@ -20,11 +21,11 @@ object AggregateRootActor {
   val eventsPerSnapshot = 10
 }
 
-trait AggregateRootAdapter {
+trait AggregateRootAdapter[S, C, E <: AnyRef] {
 
-  def acceptCommand(aggregateId: String, state: State, eventReaction: (State, Event) ⇒ Unit, queryReaction: State ⇒ Unit): PartialFunction[Command, Unit]
+  def acceptCommand(aggregateId: String, state: S, eventReaction: (S, E) ⇒ Unit, queryReaction: S ⇒ Unit): PartialFunction[C, Unit]
 
-  def recover(aggregateId: String, state: State, event: Event): State
+  def recover(aggregateId: String, state: S, event: E): S
 }
 
 
@@ -33,11 +34,13 @@ trait AggregateRootAdapter {
  * It includes such functionality as: snapshot management, publishing applied events to Event Bus, handling processor recovery.
  *
  */
-class AggregateRootActor(val id: String, var state: State, var aggregate: AggregateRootAdapter) extends PersistentActor with ActorLogging {
+class AggregateRootActor[S: ClassTag, C: ClassTag, E <: AnyRef : ClassTag](val id: String,
+                                                                           var state: S,
+                                                                           var aggregate: AggregateRootAdapter[S, C, E])
+  extends PersistentActor with ActorLogging {
 
 
   import AggregateRootActor._
-  import AggregateRoot._
 
   override def persistenceId = id
 
@@ -49,7 +52,7 @@ class AggregateRootActor(val id: String, var state: State, var aggregate: Aggreg
    *
    * @param evt Event that has been persisted
    */
-  protected def afterEventPersisted(newState: State)(evt: Event): Unit = {
+  protected def afterEventPersisted(newState: S)(evt: E): Unit = {
     updateAndRespond(newState)
     eventsSinceLastSnapshot += 1
     if (eventsSinceLastSnapshot >= eventsPerSnapshot) {
@@ -60,7 +63,7 @@ class AggregateRootActor(val id: String, var state: State, var aggregate: Aggreg
     publish(evt)
   }
 
-  private def updateAndRespond(newState: State): Unit = {
+  private def updateAndRespond(newState: S): Unit = {
     updateAggregate(newState)
     respond()
   }
@@ -74,32 +77,32 @@ class AggregateRootActor(val id: String, var state: State, var aggregate: Aggreg
     context.parent ! Acknowledge(persistenceId)
   }
 
-  private def publish(event: Event) =
+  private def publish(event: E) =
     context.system.eventStream.publish(event)
 
   override val receiveRecover: Receive = {
-    case evt: Event =>
+    case evt: E if classTag[E].runtimeClass.isInstance(evt) =>
       eventsSinceLastSnapshot += 1
       updateAggregate(aggregate.recover(id, state, evt))
-    case SnapshotOffer(metadata, state: State) =>
+    case SnapshotOffer(metadata, state: S) =>
       restoreFromSnapshot(metadata, state)
       log.debug("recovering aggregate from snapshot")
   }
 
-  def restoreFromSnapshot(metadata: SnapshotMetadata, state: State) = {
+  def restoreFromSnapshot(metadata: SnapshotMetadata, state: S) = {
     updateAggregate(state)
   }
 
-  def updateAggregate(state: State) {
+  def updateAggregate(state: S) {
     this.state = state
   }
 
-  def afterEventCallback(newState: State, event: Event) {
+  def afterEventCallback(newState: S, event: E) {
     persist(event)(afterEventPersisted(newState))
   }
 
   val receiveCommand: Receive = {
-    case command: Command ⇒ {
+    case command: C if classTag[C].runtimeClass.isInstance(command) ⇒ {
       aggregate.acceptCommand(id, state, afterEventCallback, respond)(command)
     }
     case KillAggregate ⇒ context.stop(self)
