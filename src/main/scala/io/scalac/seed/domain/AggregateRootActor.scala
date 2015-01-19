@@ -81,7 +81,7 @@ class AggregateRootActor[S: ClassTag, C: ClassTag, E <: AnyRef : ClassTag](val i
     context.system.eventStream.publish(event)
 
   override val receiveRecover: Receive = {
-    case evt: E if classTag[E].runtimeClass.isInstance(evt) =>
+    case evt: E =>
       eventsSinceLastSnapshot += 1
       updateAggregate(aggregate.recover(id, state, evt))
     case SnapshotOffer(metadata, state: S) =>
@@ -102,7 +102,7 @@ class AggregateRootActor[S: ClassTag, C: ClassTag, E <: AnyRef : ClassTag](val i
   }
 
   val receiveCommand: Receive = {
-    case command: C if classTag[C].runtimeClass.isInstance(command) ⇒ {
+    case command: C ⇒ {
       aggregate.acceptCommand(id, state, afterEventCallback, respond)(command)
     }
     case KillAggregate ⇒ context.stop(self)
