@@ -17,3 +17,4 @@ To stop:
 - simple domain model representing a Vehicle and User
 - akka-persistence event sourcing used to track changes to the domain model
 
+Developed by [Scalac](https://scalac.io/?utm_source=scalac_github&utm_campaign=scalac1&utm_medium=web)
