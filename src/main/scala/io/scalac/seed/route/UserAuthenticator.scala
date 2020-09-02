@@ -5,7 +5,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import com.github.t3hnar.bcrypt._
 import io.scalac.seed.domain.UserAggregate.User
-import io.scalac.seed.service.UserAggregateManager.GetUser
+import io.scalac.seed.service.UserCommandAdapter.GetUser
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 import scala.language.postfixOps

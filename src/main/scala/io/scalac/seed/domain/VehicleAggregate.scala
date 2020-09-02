@@ -1,7 +1,7 @@
 package io.scalac.seed.domain
 
-import akka.actor._
-import akka.persistence._
+import io.scalac.seed.domain.AggregateRoot._
+import io.scalac.seed.domain.VehicleAggregate._
 
 object VehicleAggregate {
 
@@ -18,71 +18,58 @@ object VehicleAggregate {
   case class ColorChanged(color: String) extends Event
   case object VehicleRemoved extends Event
 
-  def props(id: String): Props = Props(new VehicleAggregate(id))
 }
 
-class VehicleAggregate(id: String) extends AggregateRoot {
+object VehicleAggregateProvider extends AggregateRootProvider{
+  def aggregateRoot(id: String, state: State): AggregateRoot = state match {
+    case Uninitialized ⇒ new VehicleAggregateInitial(id, state)
+    case Removed ⇒ new VehicleAggregateRemoved(id, state)
+    case _: Vehicle ⇒ new VehicleAggregateCreated(id, state)
+  }
+}
 
-  import AggregateRoot._
-  import VehicleAggregate._
-
-  override def persistenceId = id
-
-  override def updateState(evt: AggregateRoot.Event): Unit = evt match {
+abstract class VehicleAggregate(aggregateId: String, state: State) extends AggregateRoot(aggregateId, state) {
+  def updateState(event: Event): State = event match {
     case VehicleInitialized(reg, col) =>
-      context.become(created)
-      state = Vehicle(id, reg, col)
+      Vehicle(aggregateId, reg, col)
     case RegNumberChanged(reg) => state match {
-      case s: Vehicle => state = s.copy(regNumber = reg) 
-      case _ => //nothing
+      case s: Vehicle => s.copy(regNumber = reg)
+      case _ => state
     }
-    case ColorChanged(col) => state match { 
-      case s: Vehicle => state = s.copy(color = col)
-      case _ => //nothing
+    case ColorChanged(col) => state match {
+      case s: Vehicle => s.copy(color = col)
+      case _ => state
     }
     case VehicleRemoved =>
-      context.become(removed)
-      state = Removed
+      Removed
   }
+}
 
-  val initial: Receive = {
+class VehicleAggregateInitial(aggregateId: String, state: State) extends VehicleAggregate(aggregateId, state) {
+  val stateBehavior: StateBehavior = {
     case Initialize(reg, col) =>
-      persist(VehicleInitialized(reg, col))(afterEventPersisted)
+      VehicleInitialized(reg, col)
     case GetState =>
-      respond()
-    case KillAggregate =>
-      context.stop(self)
+      state
   }
-  
-  val created: Receive = {
+}
+
+class VehicleAggregateCreated(aggregateId: String, state: State) extends VehicleAggregate(aggregateId, state) {
+  val stateBehavior: StateBehavior = {
     case ChangeRegNumber(reg) =>
-      persist(RegNumberChanged(reg))(afterEventPersisted)
-    case ChangeColor(color) => 
-      persist(ColorChanged(color))(afterEventPersisted)
+      RegNumberChanged(reg)
+    case ChangeColor(color) =>
+      ColorChanged(color)
     case Remove =>
-      persist(VehicleRemoved)(afterEventPersisted)
+      VehicleRemoved
     case GetState =>
-      respond()
-    case KillAggregate =>
-      context.stop(self)
+      state
   }
-  
-  val removed: Receive = {
+}
+
+class VehicleAggregateRemoved(aggregateId: String, state: State) extends VehicleAggregate(aggregateId, state) {
+  val stateBehavior: StateBehavior = {
     case GetState =>
-      respond()
-    case KillAggregate =>
-      context.stop(self)
+      state
   }
-
-  val receiveCommand: Receive = initial
-
-  override def restoreFromSnapshot(metadata: SnapshotMetadata, state: State) = {
-    this.state = state
-    state match {
-      case Uninitialized => context become initial
-      case Removed => context become removed
-      case _: Vehicle => context become created
-    }
-  }
-
 }

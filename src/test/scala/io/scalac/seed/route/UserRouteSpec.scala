@@ -9,7 +9,7 @@ import akka.util.Timeout
 import com.github.t3hnar.bcrypt._
 import io.scalac.seed.domain.UserAggregate.User
 import io.scalac.seed.service.UserAggregateManager
-import io.scalac.seed.service.UserAggregateManager._
+import io.scalac.seed.service.UserCommandAdapter._
 import org.json4s.DefaultFormats
 import org.scalatest._
 import spray.http._

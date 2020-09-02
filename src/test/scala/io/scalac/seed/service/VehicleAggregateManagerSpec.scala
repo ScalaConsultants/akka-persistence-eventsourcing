@@ -14,7 +14,7 @@ import scala.language.postfixOps
 
 class VehicleAggregateManagerSpec extends FlatSpec with BeforeAndAfterAll {
 
-  import VehicleAggregateManager._
+  import VehicleCommandAdapter._
 
   implicit val actorSystem = ActorSystem("vehicleAggregateManagerSpec-system")
   
