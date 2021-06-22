@@ -13,7 +13,7 @@ object UserRoute {
 
 trait UserRoute extends HttpService with Json4sSupport with RequestHandlerCreator with UserAuthenticator {
 
-  import UserAggregateManager._
+  import UserCommandAdapter._
 
   val userAggregateManager: ActorRef
   
@@ -37,10 +37,10 @@ trait UserRoute extends HttpService with Json4sSupport with RequestHandlerCreato
       }
     }
 
-  private def serveRegister(message : AggregateManager.Command): Route =
+  private def serveRegister(message : CommandAdapter.Command): Route =
     ctx => handleRegister[UserAggregate.User](ctx, userAggregateManager, message)
 
-  private def serveUpdate(message : AggregateManager.Command): Route =
+  private def serveUpdate(message : CommandAdapter.Command): Route =
     ctx => handleUpdate[UserAggregate.User](ctx, userAggregateManager, message)
 
 }

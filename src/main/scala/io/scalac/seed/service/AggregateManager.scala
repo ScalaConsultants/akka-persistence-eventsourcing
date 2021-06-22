@@ -1,11 +1,10 @@
 package io.scalac.seed.service
 
 import akka.actor._
-import io.scalac.seed.domain.AggregateRoot
+import io.scalac.seed.domain.{AggregatePropsProvider, AggregateRoot, AggregateRootActor}
+import io.scalac.seed.service.CommandAdapter.Command
 
 object AggregateManager {
-
-  trait Command
 
   val maxChildren = 40
   val childrenToKillAtOnce = 20
@@ -20,8 +19,9 @@ object AggregateManager {
  *
  */
 trait AggregateManager extends Actor with ActorLogging {
+  this: CommandAdapter with AggregatePropsProvider ⇒
 
-  import AggregateRoot._
+  import AggregateRootActor._
   import AggregateManager._
 
   import scala.collection.immutable._
@@ -33,7 +33,12 @@ trait AggregateManager extends Actor with ActorLogging {
    * In most cases it should transform message to appropriate aggregate command (and apply some additional logic if needed) and call [[AggregateManager.processAggregateCommand]]
    *
    */
-  def processCommand: Receive
+  def processCommand: Receive = {
+    case command: Command ⇒ {
+      val(id, rootCommand) = adapt(command)
+      processAggregateCommand(id, rootCommand)
+    }
+  }
 
   override def receive = processCommand orElse defaultProcessCommand
 
@@ -75,18 +80,10 @@ trait AggregateManager extends Actor with ActorLogging {
 
   protected def create(id: String): ActorRef = {
     killChildrenIfNecessary()
-    val agg = context.actorOf(aggregateProps(id), id)
+    val agg = context.actorOf(aggregateRootProps(id), id)
     context watch agg
     agg
   }
-
-  /**
-   * Returns Props used to create an aggregate with specified id
-   *
-   * @param id Aggregate id
-   * @return Props to create aggregate
-   */
-  def aggregateProps(id: String): Props
 
   private def killChildrenIfNecessary() = {
     val childrenCount = context.children.size - childrenBeingTerminated.size
